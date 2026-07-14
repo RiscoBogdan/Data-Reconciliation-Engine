@@ -1,0 +1,544 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="-don1cQl_J0inkxfuzpk">
+    <mxGraphModel dx="1111" dy="676" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;fontColor=#1e3a5f;" value="Compare Engine — Full System Flow" vertex="1">
+          <mxGeometry height="40" width="700" x="550" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="l0bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=30;" value="" vertex="1">
+          <mxGeometry height="220" width="340" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="l0title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 0 — STARTUP" vertex="1">
+          <mxGeometry height="20" width="200" x="40" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="springboot" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" value="Spring Boot JVM" vertex="1">
+          <mxGeometry height="40" width="200" x="100" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="sqlite_init" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="DiffRepository.initialise()&#xa;CREATE TABLE diffs&#xa;CREATE INDEXes" vertex="1">
+          <mxGeometry height="60" width="160" x="60" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="appprops" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="AppProperties&#xa;oracle / snowflake / sqlite&#xa;schema mappings" vertex="1">
+          <mxGeometry height="60" width="110" x="240" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="status_idle" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="status = IDLE" vertex="1">
+          <mxGeometry height="30" width="120" x="140" y="235" as="geometry" />
+        </mxCell>
+        <mxCell id="e_spring_sqlite" edge="1" parent="1" source="springboot" style="edgeStyle=orthogonalEdgeStyle;" target="sqlite_init">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_spring_props" edge="1" parent="1" source="springboot" style="edgeStyle=orthogonalEdgeStyle;" target="appprops">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_spring_idle" edge="1" parent="1" source="springboot" style="edgeStyle=orthogonalEdgeStyle;" target="status_idle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l1bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;opacity=30;" value="" vertex="1">
+          <mxGeometry height="220" width="380" x="400" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="l1title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 1 — BROWSER SPA (app.js)" vertex="1">
+          <mxGeometry height="20" width="280" x="410" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="browser" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;" value="🌐 Browser&#xa;index.html + app.js" vertex="1">
+          <mxGeometry height="40" width="200" x="490" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="load_ora_db" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=10;" value="loadOracleDatabases()&#xa;GET /api/oracle-databases" vertex="1">
+          <mxGeometry height="40" width="160" x="410" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="load_mappings" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=10;" value="loadSchemaMappings()&#xa;GET /api/schema-mappings" vertex="1">
+          <mxGeometry height="40" width="160" x="590" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="poll_start" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="loadResults() poll every 2s&#xa;GET /api/results" vertex="1">
+          <mxGeometry height="40" width="200" x="490" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="e_browser_loaddb" edge="1" parent="1" source="browser" style="edgeStyle=orthogonalEdgeStyle;" target="load_ora_db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_browser_loadmap" edge="1" parent="1" source="browser" style="edgeStyle=orthogonalEdgeStyle;" target="load_mappings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_browser_poll" edge="1" parent="1" source="browser" style="edgeStyle=orthogonalEdgeStyle;" target="poll_start">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l2bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=30;" value="" vertex="1">
+          <mxGeometry height="220" width="380" x="810" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="l2title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 2 — TABLE DISCOVERY" vertex="1">
+          <mxGeometry height="20" width="260" x="820" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="scan_btn" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" value="[Scan Tables] click&#xa;scanMatchedTables()" vertex="1">
+          <mxGeometry height="40" width="200" x="890" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="list_ora" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" value="SchemaInspector&#xa;listOracleTables()&#xa;SELECT TABLE_NAME&#xa;FROM ALL_TABLES" vertex="1">
+          <mxGeometry height="70" width="140" x="820" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="list_sf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="SchemaInspector&#xa;listSnowflakeTables()&#xa;SELECT TABLE_NAME&#xa;FROM INFORMATION_SCHEMA" vertex="1">
+          <mxGeometry height="70" width="160" x="980" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="intersect" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="Oracle ∩ Snowflake&#xa;= common tables list" vertex="1">
+          <mxGeometry height="30" width="180" x="880" y="237" as="geometry" />
+        </mxCell>
+        <mxCell id="e_scan_ora" edge="1" parent="1" source="scan_btn" style="edgeStyle=orthogonalEdgeStyle;" target="list_ora">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_scan_sf" edge="1" parent="1" source="scan_btn" style="edgeStyle=orthogonalEdgeStyle;" target="list_sf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ora_int" edge="1" parent="1" source="list_ora" style="edgeStyle=orthogonalEdgeStyle;" target="intersect">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sf_int" edge="1" parent="1" source="list_sf" style="edgeStyle=orthogonalEdgeStyle;" target="intersect">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l3bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;opacity=30;" value="" vertex="1">
+          <mxGeometry height="220" width="360" x="1220" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="l3title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 3 — TABLE CONFIG (per table)" vertex="1">
+          <mxGeometry height="20" width="280" x="1230" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="configure_btn" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;" value="[Configure] click&#xa;GET /api/schema&#xa;JDBC DatabaseMetaData" vertex="1">
+          <mxGeometry height="50" width="200" x="1300" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="drag_zones" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=10;fontFamily=Courier New;" value="Drag &amp; Drop Zones (SortableJS)&#xa;┌──────┬──────┬──────┐&#xa;│AVAIL │  PK  │ HASH │&#xa;└──────┴──────┴──────┘" vertex="1">
+          <mxGeometry height="70" width="240" x="1230" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="localstorage" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="localStorage&#xa;savedTableConfigs&#xa;{PK, hashCols, modCol, buffer}" vertex="1">
+          <mxGeometry height="80" width="70" x="1490" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="e_cfg_drag" edge="1" parent="1" source="configure_btn" style="edgeStyle=orthogonalEdgeStyle;" target="drag_zones">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_drag_ls" edge="1" label="save" parent="1" source="drag_zones" style="edgeStyle=orthogonalEdgeStyle;" target="localstorage">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l4bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;opacity=20;" value="" vertex="1">
+          <mxGeometry height="140" width="700" x="30" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="l4title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 4 — JOB LAUNCH" vertex="1">
+          <mxGeometry height="20" width="200" x="40" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="zRIzngRHvlGxVKNEynXs-1" edge="1" parent="1" source="single_job" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="batch_job">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="single_job" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" value="Single Table&#xa;POST /api/start-job&#xa;{sourceTable, destTable,&#xa; primaryKeys, hashColumns,&#xa; modifiedColumn, bufferMinutes}" vertex="1">
+          <mxGeometry height="90" width="190" x="50" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="batch_job" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="Batch (multiple tables)&#xa;POST /api/start-batch&#xa;{schemaIds[], sourceSchemas[],&#xa; tables[], tableConfigs{},&#xa; destSchema, clearBefore}" vertex="1">
+          <mxGeometry height="90" width="200" x="270" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="controller" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;" value="ReconcilerController&#xa;(Spring @RestController)" vertex="1">
+          <mxGeometry height="50" width="200" x="500" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="e_batch_ctrl" edge="1" parent="1" source="batch_job" style="edgeStyle=orthogonalEdgeStyle;" target="controller">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l5bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=20;" value="" vertex="1">
+          <mxGeometry height="170" width="840" x="760" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="l5title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 5 — RECONCILERSERVICE: JOB ORCHESTRATION" vertex="1">
+          <mxGeometry height="20" width="400" x="770" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="svc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=12;" value="ReconcilerService" vertex="1">
+          <mxGeometry height="40" width="180" x="800" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="sanitize" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="sanitizeConfig()&#xa;remove modifiedColumn&#xa;from hashColumns" vertex="1">
+          <mxGeometry height="55" width="150" x="1010" y="335" as="geometry" />
+        </mxCell>
+        <mxCell id="resolve_tables" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="resolveTables()&#xa;oracle ∩ snowflake&#xa;per schema mapping" vertex="1">
+          <mxGeometry height="55" width="140" x="1190" y="335" as="geometry" />
+        </mxCell>
+        <mxCell id="parallel" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=10;" value="Virtual Threads&#xa;min(8, tableCount) parallel&#xa;ExecutorCompletionService" vertex="1">
+          <mxGeometry height="55" width="170" x="1350" y="335" as="geometry" />
+        </mxCell>
+        <mxCell id="vt1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="Virtual Thread 1&#xa;TABLE_A" vertex="1">
+          <mxGeometry height="40" width="110" x="1540" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="vt2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="Virtual Thread 2&#xa;TABLE_B" vertex="1">
+          <mxGeometry height="40" width="110" x="1540" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="vt3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="Virtual Thread N&#xa;TABLE_N" vertex="1">
+          <mxGeometry height="40" width="110" x="1540" y="415" as="geometry" />
+        </mxCell>
+        <mxCell id="e_svc_san" edge="1" parent="1" source="svc" style="edgeStyle=orthogonalEdgeStyle;" target="sanitize">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_san_res" edge="1" parent="1" source="sanitize" style="edgeStyle=orthogonalEdgeStyle;" target="resolve_tables">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_res_par" edge="1" parent="1" source="resolve_tables" style="edgeStyle=orthogonalEdgeStyle;" target="parallel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_par_vt1" edge="1" parent="1" source="parallel" style="edgeStyle=orthogonalEdgeStyle;" target="vt1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_par_vt2" edge="1" parent="1" source="parallel" style="edgeStyle=orthogonalEdgeStyle;" target="vt2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_par_vt3" edge="1" parent="1" source="parallel" style="edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="vt3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1595" y="363" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ctrl_svc" edge="1" parent="1" source="controller" style="edgeStyle=orthogonalEdgeStyle;" target="svc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l6bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;opacity=25;" value="" vertex="1">
+          <mxGeometry height="380" width="800" x="30" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="l6title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 6 — COMPAREENGINE: SORT-MERGE ZIPPER (one instance per table)" vertex="1">
+          <mxGeometry height="20" width="500" x="40" y="515" as="geometry" />
+        </mxCell>
+        <mxCell id="ce_start" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=12;" value="CompareEngine.run()" vertex="1">
+          <mxGeometry height="40" width="180" x="330" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="open_src" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" value="openSource()&#xa;DriverManager → Oracle&#xa;setAutoCommit(false)" vertex="1">
+          <mxGeometry height="55" width="150" x="60" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="open_dst" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="openDest()&#xa;DriverManager → Snowflake" vertex="1">
+          <mxGeometry height="55" width="160" x="630" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="zip_decision" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" value="compare&#xa;pkComposite" vertex="1">
+          <mxGeometry height="80" width="180" x="330" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp_eq" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="cmp == 0&#xa;same PK" vertex="1">
+          <mxGeometry height="35" width="160" x="340" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp_lt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="cmp &lt; 0&#xa;src PK smaller" vertex="1">
+          <mxGeometry height="35" width="150" x="160" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp_gt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="cmp &gt; 0&#xa;dest PK smaller" vertex="1">
+          <mxGeometry height="35" width="150" x="530" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="hash_check" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="hashes equal?" vertex="1">
+          <mxGeometry height="60" width="160" x="340" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="miss_dest" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=10;" value="MISSING_IN_DEST&#xa;batch.add()" vertex="1">
+          <mxGeometry height="40" width="150" x="160" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="miss_src" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=10;" value="MISSING_IN_SOURCE&#xa;batch.add()" vertex="1">
+          <mxGeometry height="40" width="150" x="530" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="hash_match" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="✓ No diff&#xa;advance both" vertex="1">
+          <mxGeometry height="35" width="120" x="230" y="875" as="geometry" />
+        </mxCell>
+        <mxCell id="hash_mismatch" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ff8000;strokeColor=#d79b00;fontStyle=1;fontSize=10;fontColor=#ffffff;" value="HASH_MISMATCH&#xa;detectChangedCols()&#xa;batch.add()" vertex="1">
+          <mxGeometry height="45" width="150" x="390" y="875" as="geometry" />
+        </mxCell>
+        <mxCell id="flush" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="batch.size() ≥ 5000?&#xa;→ diffRepo.insertBatch()&#xa;every 100K rows → status update" vertex="1">
+          <mxGeometry height="55" width="200" x="580" y="830" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ce_opensrc" edge="1" parent="1" source="ce_start" target="open_src">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ce_opendst" edge="1" parent="1" source="ce_start" target="open_dst">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ce_zip" edge="1" parent="1" source="ce_start" style="edgeStyle=orthogonalEdgeStyle;" target="zip_decision">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_zip_eq" edge="1" label="==" parent="1" source="zip_decision" style="edgeStyle=orthogonalEdgeStyle;" target="cmp_eq">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_zip_lt" edge="1" label="&lt;" parent="1" source="zip_decision" style="edgeStyle=orthogonalEdgeStyle;" target="cmp_lt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_zip_gt" edge="1" label="&gt;" parent="1" source="zip_decision" style="edgeStyle=orthogonalEdgeStyle;" target="cmp_gt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_eq_hash" edge="1" parent="1" source="cmp_eq" style="edgeStyle=orthogonalEdgeStyle;" target="hash_check">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_lt_missdest" edge="1" parent="1" source="cmp_lt" style="edgeStyle=orthogonalEdgeStyle;" target="miss_dest">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_gt_misssrc" edge="1" parent="1" source="cmp_gt" style="edgeStyle=orthogonalEdgeStyle;" target="miss_src">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_hash_match" edge="1" label="YES" parent="1" source="hash_check" style="edgeStyle=orthogonalEdgeStyle;" target="hash_match">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_hash_mismatch" edge="1" label="NO" parent="1" source="hash_check" style="edgeStyle=orthogonalEdgeStyle;" target="hash_mismatch">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_missdest_flush" edge="1" parent="1" source="miss_dest" style="edgeStyle=orthogonalEdgeStyle;" target="flush">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_misssrc_flush" edge="1" parent="1" source="miss_src" style="edgeStyle=orthogonalEdgeStyle;" target="flush">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_hashmis_flush" edge="1" parent="1" source="hash_mismatch" style="edgeStyle=orthogonalEdgeStyle;" target="flush">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l7bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;opacity=20;" value="" vertex="1">
+          <mxGeometry height="380" width="490" x="860" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="l7title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 7 — ORACLE BATCH ITERATOR (keyset pagination)" vertex="1">
+          <mxGeometry height="20" width="400" x="870" y="515" as="geometry" />
+        </mxCell>
+        <mxCell id="ora_iter" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" value="OracleBatchIterator&#xa;(constructor)" vertex="1">
+          <mxGeometry height="40" width="180" x="960" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="first_page_sql" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;fontFamily=Courier New;" value="firstPageSql (PreparedStatement)&#xa;SELECT pk_composite, row_hash, pk_cols&#xa;FROM TABLE&#xa;[WHERE modified &lt; NOW - 15min]&#xa;ORDER BY pk  FETCH FIRST 50000" vertex="1">
+          <mxGeometry height="80" width="220" x="870" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="seek_page_sql" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;fontFamily=Courier New;" value="seekPageSql (PreparedStatement)&#xa;SELECT pk_composite, row_hash, pk_cols&#xa;FROM TABLE&#xa;WHERE [modified &lt; NOW - 15min AND]&#xa;      (pk1,pk2) &gt; (?,?)&#xa;ORDER BY pk  FETCH FIRST 50000" vertex="1">
+          <mxGeometry height="80" width="220" x="1110" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="page_loop" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=10;" value="Page Loop&#xa;lastPkObjects == null?&#xa;  → use firstPagePs&#xa;else&#xa;  → bind lastPkObjects&#xa;  → use seekPagePs&#xa;count &lt; 50000 → exhausted" vertex="1">
+          <mxGeometry height="100" width="210" x="880" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="hash_expr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;fontFamily=Courier New;" value="Hash Expression per type:&#xa;NUMBER → NVL(REGEXP_REPLACE(...0+$), &#39;NULL_NUM&#39;)&#xa;DATE   → NVL(TO_CHAR(col,&#39;YYYY-MM-DD&#39;),&#39;NULL_DATE&#39;)&#xa;other  → NVL(CAST(col AS VARCHAR2(4000)),&#39;NULL_STR&#39;)&#xa;→ RAWTOHEX(STANDARD_HASH(expr,&#39;MD5&#39;))" vertex="1">
+          <mxGeometry height="100" width="220" x="1110" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="e_oraiter_first" edge="1" parent="1" source="ora_iter" style="edgeStyle=orthogonalEdgeStyle;" target="first_page_sql">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_oraiter_seek" edge="1" parent="1" source="ora_iter" style="edgeStyle=orthogonalEdgeStyle;" target="seek_page_sql">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_first_loop" edge="1" parent="1" source="first_page_sql" style="edgeStyle=orthogonalEdgeStyle;" target="page_loop">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_seek_loop" edge="1" parent="1" source="seek_page_sql" style="edgeStyle=orthogonalEdgeStyle;" target="page_loop">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_iter_hash" edge="1" parent="1" source="ora_iter" style="edgeStyle=orthogonalEdgeStyle;" target="hash_expr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l8bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=20;" value="" vertex="1">
+          <mxGeometry height="380" width="490" x="1370" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="l8title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 8 — SNOWFLAKE ROW ITERATOR (Arrow chunk streaming)" vertex="1">
+          <mxGeometry height="20" width="440" x="1380" y="515" as="geometry" />
+        </mxCell>
+        <mxCell id="sf_iter" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;" value="SnowflakeRowIterator.open()" vertex="1">
+          <mxGeometry height="40" width="200" x="1480" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="sf_sql" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;fontFamily=Courier New;" value="SELECT pk_composite, MD5(hashExpr)&#xa;FROM TABLE&#xa;[WHERE modified &lt; DATEADD(&#39;MINUTE&#39;,-15,NOW())]&#xa;[AND destFilterCol = &#39;val&#39;]&#xa;ORDER BY pk_col1, pk_col2" vertex="1">
+          <mxGeometry height="80" width="230" x="1380" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="sf_warehouse" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=10;" value="Snowflake Warehouse&#xa;executes full ORDER BY&#xa;materialises Arrow chunks&#xa;in cloud storage" vertex="1">
+          <mxGeometry height="80" width="200" x="1630" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="sf_chunks" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="getResultSetSerializables(50MB)&#xa;→ List of chunk metadata pointers&#xa;  (no row data transferred yet)&#xa;N chunks × ~50MB each" vertex="1">
+          <mxGeometry height="70" width="210" x="1390" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="sf_advance" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="advance() per hasNext():&#xa;currentChunkRs.next()?&#xa;  YES → nextRow = Row(col1, col2)&#xa;  NO  → closeChunk(); chunkIdx++&#xa;        open next chunk&#xa;        → download+decompress ~50MB" vertex="1">
+          <mxGeometry height="90" width="210" x="1620" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="mem_note" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=2;" value="⚠ Memory: ≤ 1 chunk (~50MB)&#xa;in JVM heap at any moment" vertex="1">
+          <mxGeometry height="40" width="200" x="1490" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sfiter_sql" edge="1" parent="1" source="sf_iter" style="edgeStyle=orthogonalEdgeStyle;" target="sf_sql">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sql_wh" edge="1" label="executes" parent="1" source="sf_sql" style="edgeStyle=orthogonalEdgeStyle;" target="sf_warehouse">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_wh_chunks" edge="1" parent="1" source="sf_warehouse" style="edgeStyle=orthogonalEdgeStyle;" target="sf_chunks">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_chunks_adv" edge="1" parent="1" source="sf_chunks" style="edgeStyle=orthogonalEdgeStyle;" target="sf_advance">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l9bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ff8000;strokeColor=#d79b00;opacity=10;" value="" vertex="1">
+          <mxGeometry height="180" width="700" x="30" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="l9title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#b85450;" value="LAYER 9 — detectChangedColumns (⚠ N+1 per HASH_MISMATCH row)" vertex="1">
+          <mxGeometry height="20" width="500" x="40" y="925" as="geometry" />
+        </mxCell>
+        <mxCell id="n1_call" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=10;" value="Called INLINE in zipper&#xa;for every HASH_MISMATCH" vertex="1">
+          <mxGeometry height="50" width="180" x="50" y="950" as="geometry" />
+        </mxCell>
+        <mxCell id="fetch_oracle_row" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" value="fetchRowAsStrings()&#xa;Oracle point query:&#xa;SELECT cols FROM TABLE&#xa;WHERE pk=? FETCH FIRST 1" vertex="1">
+          <mxGeometry height="65" width="170" x="270" y="945" as="geometry" />
+        </mxCell>
+        <mxCell id="fetch_sf_row" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="fetchRowAsStrings()&#xa;Snowflake point query:&#xa;SELECT cols FROM TABLE&#xa;WHERE pk=? LIMIT 1" vertex="1">
+          <mxGeometry height="65" width="170" x="460" y="945" as="geometry" />
+        </mxCell>
+        <mxCell id="val_norm" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="ValueNormalizer.normalize(a, type)&#xa;ValueNormalizer.normalize(b, type)&#xa;→ changed columns: &#39;STATUS,AMOUNT&#39;" vertex="1">
+          <mxGeometry height="45" width="300" x="200" y="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="n1_warn" parent="1" style="text;html=1;strokeColor=none;fillColor=none;fontStyle=2+1;fontSize=10;fontColor=#b85450;" value="⚠ 100K mismatches = 200K extra JDBC calls" vertex="1">
+          <mxGeometry height="20" width="280" x="50" y="1060" as="geometry" />
+        </mxCell>
+        <mxCell id="e_n1_ora" edge="1" parent="1" source="n1_call" style="edgeStyle=orthogonalEdgeStyle;" target="fetch_oracle_row">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_n1_sf" edge="1" parent="1" source="n1_call" style="edgeStyle=orthogonalEdgeStyle;" target="fetch_sf_row">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ora_norm" edge="1" parent="1" source="fetch_oracle_row" style="edgeStyle=orthogonalEdgeStyle;" target="val_norm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sf_norm" edge="1" parent="1" source="fetch_sf_row" style="edgeStyle=orthogonalEdgeStyle;" target="val_norm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l10bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;opacity=25;" value="" vertex="1">
+          <mxGeometry height="180" width="600" x="760" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="l10title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 10 — DiffRepository (SQLite)" vertex="1">
+          <mxGeometry height="20" width="300" x="770" y="925" as="geometry" />
+        </mxCell>
+        <mxCell id="diff_repo" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;" value="DiffRepository&#xa;synchronized insertBatch()" vertex="1">
+          <mxGeometry height="45" width="200" x="820" y="950" as="geometry" />
+        </mxCell>
+        <mxCell id="sqlite_table" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=9;fontFamily=Courier New;align=left;" value="TABLE diffs&#xa;─────────────────────────────&#xa;id  INTEGER PK AUTOINCREMENT&#xa;job_ts  TEXT&#xa;table_name  TEXT  ← INDEX&#xa;pk_composite  TEXT  ← INDEX&#xa;diff_type  TEXT  ← INDEX&#xa;source_hash  TEXT&#xa;dest_hash  TEXT&#xa;changed_columns  TEXT&#xa;created_at  TEXT" vertex="1">
+          <mxGeometry height="160" width="270" x="1060" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="sync_warn" parent="1" style="text;html=1;strokeColor=none;fillColor=none;fontStyle=2+1;fontSize=10;fontColor=#b85450;" value="⚠ synchronized = all 8 parallel&#xa;table threads contend on 1 lock" vertex="1">
+          <mxGeometry height="30" width="280" x="760" y="1010" as="geometry" />
+        </mxCell>
+        <mxCell id="e_repo_sqlite" edge="1" parent="1" source="diff_repo" style="edgeStyle=orthogonalEdgeStyle;" target="sqlite_table">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l11bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;opacity=20;" value="" vertex="1">
+          <mxGeometry height="200" width="1330" x="30" y="1130" as="geometry" />
+        </mxCell>
+        <mxCell id="l11title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 11 — LIVE POLLING (every 2 seconds while RUNNING)" vertex="1">
+          <mxGeometry height="20" width="500" x="40" y="1135" as="geometry" />
+        </mxCell>
+        <mxCell id="poll_get" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=10;" value="GET /api/results&#xa;?page=N&amp;size=100&#xa;&amp;search=S&amp;table=T" vertex="1">
+          <mxGeometry height="60" width="150" x="50" y="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="fetch_rows" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="diffRepo.fetch()&#xa;SELECT * FROM diffs&#xa;ORDER BY id DESC&#xa;LIMIT 100 OFFSET N" vertex="1">
+          <mxGeometry height="60" width="160" x="230" y="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="status_read" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="service.currentStatus()&#xa;AtomicReference&#xa;updated every 100K rows" vertex="1">
+          <mxGeometry height="60" width="160" x="420" y="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="table_summaries" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="diffRepo.tableSummaries()&#xa;COUNT / SUM per diff_type&#xa;GROUP BY table_name" vertex="1">
+          <mxGeometry height="60" width="160" x="610" y="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="grid_update" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="AG Grid update&#xa;gridApi.setGridOption(&#xa;  &#39;rowData&#39;, rows)" vertex="1">
+          <mxGeometry height="50" width="140" x="800" y="1155" as="geometry" />
+        </mxCell>
+        <mxCell id="chart_update" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="Chart.js tick&#xa;pushLiveDiffPoint()&#xa;per-table scope" vertex="1">
+          <mxGeometry height="50" width="140" x="970" y="1155" as="geometry" />
+        </mxCell>
+        <mxCell id="panel_update" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="renderTablePanels()&#xa;accordion per table&#xa;counts + badges" vertex="1">
+          <mxGeometry height="50" width="140" x="1140" y="1155" as="geometry" />
+        </mxCell>
+        <mxCell id="status_badge" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="statusBadge&#xa;IDLE/RUNNING/&#xa;COMPLETED/FAILED&#xa;stop poll if not RUNNING" vertex="1">
+          <mxGeometry height="60" width="150" x="80" y="1248" as="geometry" />
+        </mxCell>
+        <mxCell id="e_poll_fetch" edge="1" parent="1" source="poll_get" target="fetch_rows">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_poll_status" edge="1" parent="1" source="poll_get" target="status_read">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_poll_summ" edge="1" parent="1" source="poll_get" target="table_summaries">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_fetch_grid" edge="1" parent="1" source="fetch_rows" target="grid_update">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_status_chart" edge="1" parent="1" source="status_read" target="chart_update">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_summ_panel" edge="1" parent="1" source="table_summaries" target="panel_update">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_poll_badge" edge="1" parent="1" source="poll_get" target="status_badge">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l12bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=20;" value="" vertex="1">
+          <mxGeometry height="410" width="480" x="1390" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="l12title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;fontColor=#1e3a5f;" value="LAYER 12 — DIFF DETAILS MODAL (on demand)" vertex="1">
+          <mxGeometry height="20" width="360" x="1400" y="925" as="geometry" />
+        </mxCell>
+        <mxCell id="view_btn" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=10;" value="User clicks [View] in AG Grid row&#xa;openDiffModal(pk, tableName)" vertex="1">
+          <mxGeometry height="50" width="220" x="1440" y="950" as="geometry" />
+        </mxCell>
+        <mxCell id="diff_api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="GET /api/diff-details&#xa;?pk=42~101&amp;table=ORDERS" vertex="1">
+          <mxGeometry height="40" width="200" x="1450" y="1020" as="geometry" />
+        </mxCell>
+        <mxCell id="two_conn" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="2 fresh connections:&#xa;DriverManager → Oracle&#xa;DriverManager → Snowflake" vertex="1">
+          <mxGeometry height="55" width="170" x="1410" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="point_q" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="fetchRowAsStrings()&#xa;Oracle: WHERE pk=? FETCH 1&#xa;Snowflake: WHERE pk=? LIMIT 1" vertex="1">
+          <mxGeometry height="55" width="190" x="1600" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="modal_table" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=9;fontFamily=Courier New;align=left;" value="Modal renders:&#xa;┌──────────┬────────────┬────────────┬─────┐&#xa;│ COLUMN   │ ORACLE VAL │   SF VAL   │DIFF?│&#xa;├──────────┼────────────┼────────────┼─────┤&#xa;│ AMOUNT   │ 99.99      │ 99.99      │ NO  │&#xa;│ STATUS   │ SHIPPED    │ PENDING    │ YES │&#xa;│ UPDATED  │ 2026-07-11 │ 2026-07-10 │ YES │&#xa;└──────────┴────────────┴────────────┴─────┘" vertex="1">
+          <mxGeometry height="150" width="450" x="1400" y="1155" as="geometry" />
+        </mxCell>
+        <mxCell id="e_view_api" edge="1" parent="1" source="view_btn" target="diff_api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_api_conn" edge="1" parent="1" source="diff_api" target="two_conn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_api_ptq" edge="1" parent="1" source="diff_api" target="point_q">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_conn_modal" edge="1" parent="1" source="two_conn" target="modal_table">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ptq_modal" edge="1" parent="1" source="point_q" target="modal_table">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_vt_ce" edge="1" label="each thread calls" parent="1" source="vt1" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#9673a6;" target="ce_start">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1595" y="490" />
+              <mxPoint x="420" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ce_oraiter" edge="1" label="creates" parent="1" source="open_src" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#d79b00;" target="ora_iter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ce_sfiter" edge="1" label="creates" parent="1" source="open_dst" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#6c8ebf;" target="sf_iter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_hashmis_n1" edge="1" label="triggers" parent="1" source="hash_mismatch" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#b85450;" target="n1_call">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="465" y="910" />
+              <mxPoint x="140" y="910" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_flush_repo" edge="1" label="insertBatch()" parent="1" source="flush" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#d6b656;" target="diff_repo">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="857" />
+              <mxPoint x="680" y="972" />
+              <mxPoint x="820" y="972" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend_bg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;" value="" vertex="1">
+          <mxGeometry height="120" width="460" x="1400" y="1355" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;" value="LEGEND" vertex="1">
+          <mxGeometry height="20" width="100" x="1410" y="1360" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" value="Oracle DB" vertex="1">
+          <mxGeometry height="25" width="90" x="1410" y="1385" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="Snowflake" vertex="1">
+          <mxGeometry height="25" width="90" x="1510" y="1385" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="SQLite" vertex="1">
+          <mxGeometry height="25" width="90" x="1610" y="1385" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="Browser / UI" vertex="1">
+          <mxGeometry height="25" width="90" x="1710" y="1385" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="⚠ Known Issue" vertex="1">
+          <mxGeometry height="25" width="100" x="1410" y="1420" as="geometry" />
+        </mxCell>
+        <mxCell id="leg6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="Spring Service" vertex="1">
+          <mxGeometry height="25" width="100" x="1520" y="1420" as="geometry" />
+        </mxCell>
+        <mxCell id="leg7" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="Decision / Logic" vertex="1">
+          <mxGeometry height="35" width="100" x="1630" y="1415" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

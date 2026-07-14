@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Compare Engine — Interactive System Flow</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --oracle: #f97316;
+      --oracle-bg: #431407;
+      --oracle-border: #c2410c;
+      --snowflake: #38bdf8;
+      --snowflake-bg: #0c4a6e;
+      --snowflake-border: #0284c7;
+      --sqlite: #facc15;
+      --sqlite-bg: #422006;
+      --sqlite-border: #ca8a04;
+      --browser: #4ade80;
+      --browser-bg: #052e16;
+      --browser-border: #16a34a;
+      --spring: #a78bfa;
+      --spring-bg: #2e1065;
+      --spring-border: #7c3aed;
+      --warn: #f87171;
+      --warn-bg: #450a0a;
+      --warn-border: #dc2626;
+      --neutral: #cbd5e1;
+      --neutral-bg: #1e293b;
+      --neutral-border: #475569;
+      --active-glow: 0 0 18px 4px rgba(56,189,248,0.55);
+      --active-glow-oracle: 0 0 18px 4px rgba(249,115,22,0.55);
+      --active-glow-green: 0 0 18px 4px rgba(74,222,128,0.55);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 13px;
+      overflow-x: auto;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .topbar h1 { font-size: 15px; font-weight: 700; color: var(--snowflake); letter-spacing: 0.03em; }
+    .topbar .subtitle { font-size: 11px; color: var(--muted); }
+    .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-simulate { background: var(--snowflake); color: #0c4a6e; }
+    .btn-simulate:hover { background: #7dd3fc; }
+    .btn-simulate:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-reset { background: var(--border); color: var(--text); }
+    .btn-reset:hover { background: #475569; }
+    .speed-label { color: var(--muted); font-size: 11px; }
+    .speed-select {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    .step-indicator {
+      font-size: 11px;
+      color: var(--muted);
+      min-width: 200px;
+    }
+    .step-indicator span { color: var(--snowflake); font-weight: 600; }
+
+    /* ── LEGEND ── */
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 8px 20px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 3px;
+      display: inline-block;
+      border: 1px solid;
+    }
+
+    /* ── CANVAS ── */
+    #canvas {
+      padding: 20px;
+      min-width: 1600px;
+      position: relative;
+    }
+
+    /* ── ROWS ── */
+    .row-group {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+
+    /* ── LAYER CONTAINERS ── */
+    .layer {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 10px 12px 12px;
+      position: relative;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      background: rgba(255,255,255,0.02);
+    }
+    .layer.active {
+      border-color: var(--snowflake);
+      box-shadow: 0 0 20px 2px rgba(56,189,248,0.2);
+    }
+    .layer-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+      opacity: 0.7;
+    }
+    .layer-nodes {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    /* ── NODE CARDS ── */
+    .node {
+      border-radius: 7px;
+      padding: 7px 10px;
+      border: 1px solid;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      min-width: 110px;
+      max-width: 220px;
+    }
+    .node:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .node.active {
+      filter: brightness(1.3);
+      transform: translateY(-2px);
+    }
+    .node.oracle    { background: var(--oracle-bg);    border-color: var(--oracle-border);    color: #fed7aa; }
+    .node.snowflake { background: var(--snowflake-bg); border-color: var(--snowflake-border); color: #bae6fd; }
+    .node.sqlite    { background: var(--sqlite-bg);    border-color: var(--sqlite-border);    color: #fef08a; }
+    .node.browser   { background: var(--browser-bg);   border-color: var(--browser-border);   color: #bbf7d0; }
+    .node.spring    { background: var(--spring-bg);    border-color: var(--spring-border);    color: #ddd6fe; }
+    .node.warn      { background: var(--warn-bg);      border-color: var(--warn-border);      color: #fecaca; }
+    .node.neutral   { background: var(--neutral-bg);   border-color: var(--neutral-border);   color: var(--neutral); }
+    .node.decision  {
+      background: var(--sqlite-bg);
+      border-color: var(--sqlite-border);
+      color: #fef08a;
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      padding: 18px 14px;
+      text-align: center;
+      min-width: 100px;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .node.active.oracle    { box-shadow: var(--active-glow-oracle); }
+    .node.active.snowflake { box-shadow: var(--active-glow); }
+    .node.active.browser   { box-shadow: var(--active-glow-green); }
+    .node.active.spring    { box-shadow: 0 0 18px 4px rgba(167,139,250,0.55); }
+    .node.active.sqlite    { box-shadow: 0 0 18px 4px rgba(250,204,21,0.55); }
+    .node.active.warn      { box-shadow: 0 0 18px 4px rgba(248,113,113,0.55); }
+    .node.active.neutral   { box-shadow: 0 0 18px 4px rgba(203,213,225,0.35); }
+
+    .node-title { font-weight: 700; font-size: 11px; margin-bottom: 2px; }
+    .node-detail { font-size: 10px; opacity: 0.8; line-height: 1.4; }
+    .node-badge {
+      display: inline-block;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-top: 3px;
+      background: rgba(255,255,255,0.1);
+      font-family: monospace;
+    }
+
+    /* ── ARROWS ── */
+    .arrow-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin: 4px 0;
+      padding-left: 20px;
+    }
+    .arrow-label { font-size: 10px; color: var(--muted); font-style: italic; }
+    .arrow-line {
+      height: 2px;
+      background: var(--border);
+      flex: 1;
+      max-width: 80px;
+      border-radius: 2px;
+      transition: background 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .arrow-line.flowing::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -100%;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--snowflake), transparent);
+      animation: flow 0.8s linear infinite;
+    }
+    .arrow-line.flowing-oracle::after {
+      background: linear-gradient(90deg, transparent, var(--oracle), transparent);
+    }
+    .arrow-line.flowing-green::after {
+      background: linear-gradient(90deg, transparent, var(--browser), transparent);
+    }
+    @keyframes flow {
+      from { left: -100%; }
+      to   { left: 100%; }
+    }
+    svg.arrows-svg {
+      position: absolute;
+      top: 0; left: 0;
+      pointer-events: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── SECTION DIVIDERS ── */
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin: 6px 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── TOOLTIP MODAL ── */
+    #tooltip {
+      position: fixed;
+      background: var(--card);
+      border: 1px solid var(--snowflake);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 12px;
+      max-width: 320px;
+      z-index: 999;
+      display: none;
+      pointer-events: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      line-height: 1.5;
+    }
+    #tooltip .tt-title { font-weight: 700; margin-bottom: 6px; color: var(--snowflake); }
+    #tooltip .tt-code {
+      background: #0f172a;
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-family: monospace;
+      font-size: 10px;
+      color: #fef08a;
+      white-space: pre;
+      margin-top: 6px;
+      overflow: auto;
+      max-height: 160px;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-wrap {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      width: 200px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--snowflake);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* ── ZIPPER VISUALISER ── */
+    .zipper-vis {
+      background: #0a1628;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: monospace;
+      font-size: 11px;
+      min-height: 60px;
+      margin-top: 8px;
+    }
+    .zipper-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 3px;
+    }
+    .zr-src  { color: var(--oracle);    width: 160px; }
+    .zr-dst  { color: var(--snowflake); width: 160px; }
+    .zr-result { font-size: 10px; }
+    .zr-match  { color: #4ade80; }
+    .zr-miss-dest { color: var(--warn); }
+    .zr-miss-src  { color: var(--snowflake); }
+    .zr-mismatch  { color: var(--oracle); }
+
+    /* ── DIFF OUTCOME COUNTER ── */
+    .counters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .counter-badge {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .cb-match    { background: #052e16; color: #4ade80; border: 1px solid #16a34a; }
+    .cb-mismatch { background: #431407; color: #fb923c; border: 1px solid #c2410c; }
+    .cb-miss-d   { background: #450a0a; color: #f87171; border: 1px solid #dc2626; }
+    .cb-miss-s   { background: #0c4a6e; color: #38bdf8; border: 1px solid #0284c7; }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar h1">⚡ Compare Engine — Interactive System Flow</div>
+    <div class="subtitle">Click any node for details · Click Simulate to animate a live job run</div>
+  </div>
+  <div class="controls">
+    <span class="speed-label">Speed:</span>
+    <select class="speed-select" id="speedSelect">
+      <option value="1200">Slow</option>
+      <option value="700" selected>Normal</option>
+      <option value="350">Fast</option>
+      <option value="150">Turbo</option>
+    </select>
+    <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+    <button class="btn btn-simulate" id="btnSimulate" onclick="simulate()">▶ Simulate Job Run</button>
+    <button class="btn btn-reset" onclick="resetAll()">↺ Reset</button>
+    <div class="step-indicator">Step: <span id="stepLabel">—</span></div>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot" style="background:#431407;border-color:#c2410c"></span> Oracle</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#0c4a6e;border-color:#0284c7"></span> Snowflake</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#422006;border-color:#ca8a04"></span> SQLite / Config</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#052e16;border-color:#16a34a"></span> Browser / UI</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#2e1065;border-color:#7c3aed"></span> Spring Service</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#450a0a;border-color:#dc2626"></span> ⚠ Known Issue</div>
+  <div class="legend-item" style="margin-left:auto;color:#94a3b8;font-size:11px;">Click any node for details</div>
+</div>
+
+<!-- MAIN CANVAS -->
+<div id="canvas">
+
+  <!-- ROW 1: Startup + Browser + Discovery + Config -->
+  <div class="row-group">
+
+    <!-- L0 STARTUP -->
+    <div class="layer" id="layer0" style="min-width:260px">
+      <div class="layer-title" style="color:#38bdf8">Layer 0 — Startup</div>
+      <div class="layer-nodes" style="flex-direction:column;gap:6px">
+        <div class="node spring" id="n_spring" onclick="showTip(this,'Spring Boot JVM','Application starts. Spring IoC container boots all beans.','@SpringBootApplication\npublic class Main {\n  public static void main(String[] args) {\n    SpringApplication.run(Main.class, args);\n  }\n}')">
+          <div class="node-title">Spring Boot JVM</div>
+          <div class="node-detail">IoC container boots</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div class="node sqlite" id="n_sqlite_init" onclick="showTip(this,'DiffRepository.initialise()','Creates SQLite tables and indexes on startup.','CREATE TABLE IF NOT EXISTS diffs (\n  id INTEGER PK AUTOINCREMENT,\n  job_ts TEXT,\n  table_name TEXT,\n  pk_composite TEXT,\n  diff_type TEXT,\n  source_hash TEXT,\n  dest_hash TEXT,\n  changed_columns TEXT,\n  created_at TEXT\n);\nCREATE INDEX idx_diffs_pk ON diffs(pk_composite);\nCREATE INDEX idx_diffs_type ON diffs(diff_type);')">
+            <div class="node-title">SQLite Init</div>
+            <div class="node-detail">CREATE TABLE diffs<br>CREATE INDEXes</div>
+          </div>
+          <div class="node neutral" id="n_appprops" onclick="showTip(this,'AppProperties','Loaded from application.yml. Holds Oracle, Snowflake, SQLite and schema mapping config.','reconciler:\n  oracle:\n    jdbcUrl: jdbc:oracle:thin:@...\n    user: ...\n    password: ...\n  snowflake:\n    jdbcUrl: jdbc:snowflake://...\n  sqlite:\n    path: reconciler_diffs.db\n  mappings:\n    - schemaId: PROD\n      oracleSchema: MYSCHEMA\n      snowflakeSchema: SF_SCHEMA')">
+            <div class="node-title">AppProperties</div>
+            <div class="node-detail">oracle / snowflake<br>sqlite / mappings</div>
+          </div>
+        </div>
+        <div class="node warn" id="n_idle" style="text-align:center">
+          <div class="node-title">status = IDLE</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L1 BROWSER -->
+    <div class="layer" id="layer1" style="min-width:260px">
+      <div class="layer-title" style="color:#4ade80">Layer 1 — Browser SPA</div>
+      <div class="layer-nodes" style="flex-direction:column;gap:6px">
+        <div class="node browser" id="n_browser" onclick="showTip(this,'Browser SPA','index.html + app.js. Vanilla JS, AG Grid, Chart.js, SortableJS. Starts polling /api/results every 2 seconds.','// On page load:\nloadOracleDatabases();\nloadSchemaMappings();\nsetInterval(loadResults, 2000);\ninitLiveDiffChart();')">
+          <div class="node-title">🌐 Browser — app.js</div>
+          <div class="node-detail">index.html + app.js</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div class="node neutral" id="n_load_db" onclick="showTip(this,'loadOracleDatabases()','Fetches Oracle DB/container names for the source database selector dropdown.','GET /api/oracle-databases\n← SELECT SYS_CONTEXT(\'USERENV\',\'DB_NAME\')\n     FROM dual')">
+            <div class="node-title">Load Oracle DBs</div>
+            <div class="node-detail">GET /api/oracle-databases</div>
+          </div>
+          <div class="node neutral" id="n_load_map" onclick="showTip(this,'loadSchemaMappings()','Fetches configured schema mappings from application.yml to show as hints.','GET /api/schema-mappings\n← props.mappings()\n   filtered by isUsable()')">
+            <div class="node-title">Load Mappings</div>
+            <div class="node-detail">GET /api/schema-mappings</div>
+          </div>
+        </div>
+        <div class="node sqlite" id="n_poll" onclick="showTip(this,'Poll Loop — every 2 seconds','setInterval(loadResults, 2000). Calls GET /api/results while job is RUNNING. Stops automatically when status is COMPLETED/FAILED/IDLE.','setInterval(loadResults, 2000);\n// Stops when:\n[\'COMPLETED\',\'FAILED\',\'IDLE\']\n  .includes(data.status)')">
+          <div class="node-title">⏱ Poll every 2s</div>
+          <div class="node-detail">GET /api/results</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L2 TABLE DISCOVERY -->
+    <div class="layer" id="layer2" style="min-width:290px">
+      <div class="layer-title" style="color:#a78bfa">Layer 2 — Table Discovery</div>
+      <div class="layer-nodes" style="flex-direction:column;gap:6px">
+        <div class="node spring" id="n_scan" onclick="showTip(this,'scanMatchedTables()','User selects Oracle schemas and clicks Scan. For each schema, calls /api/match-tables to find Oracle ∩ Snowflake common tables.','GET /api/match-tables\n  ?sourceSchema=MYSCHEMA\n  &destSchema=SF_SCHEMA\n  &destDatabase=MYDB\n\n→ SchemaInspector.listOracleTables()\n  SELECT TABLE_NAME FROM ALL_TABLES\n  WHERE OWNER = ?\n\n→ SchemaInspector.listSnowflakeTables()\n  SELECT TABLE_NAME FROM\n  INFORMATION_SCHEMA.TABLES\n  WHERE TABLE_SCHEMA = ?')">
+          <div class="node-title">[Scan Tables] click</div>
+          <div class="node-detail">scanMatchedTables()</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div class="node oracle" id="n_list_ora" onclick="showTip(this,'listOracleTables()','Queries Oracle ALL_TABLES for the given schema. Returns TableRef list.','SELECT TABLE_NAME\nFROM ALL_TABLES\nWHERE OWNER = ?\nORDER BY TABLE_NAME')">
+            <div class="node-title">Oracle Tables</div>
+            <div class="node-detail">ALL_TABLES query</div>
+          </div>
+          <div class="node snowflake" id="n_list_sf" onclick="showTip(this,'listSnowflakeTables()','Queries Snowflake INFORMATION_SCHEMA.TABLES for the destination schema.','SELECT TABLE_NAME\nFROM INFORMATION_SCHEMA.TABLES\nWHERE TABLE_SCHEMA = ?\nORDER BY TABLE_NAME')">
+            <div class="node-title">Snowflake Tables</div>
+            <div class="node-detail">INFORMATION_SCHEMA</div>
+          </div>
+        </div>
+        <div class="node browser" id="n_intersect" onclick="showTip(this,'Oracle ∩ Snowflake Intersection','Only table names present in BOTH Oracle and Snowflake are kept. Rendered as a checkbox list. User can select individual tables to run.','allMatchedTables = oracle ∩ snowflake\nrenderMatchedTables()\n// shows checkbox per table\n// with SAVED/MODIFIED badges')">
+          <div class="node-title">Oracle ∩ Snowflake</div>
+          <div class="node-detail">Common tables → checkbox list</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L3 TABLE CONFIG -->
+    <div class="layer" id="layer3" style="min-width:280px">
+      <div class="layer-title" style="color:#facc15">Layer 3 — Table Config</div>
+      <div class="layer-nodes" style="flex-direction:column;gap:6px">
+        <div class="node neutral" id="n_configure" onclick="showTip(this,'[Configure] Table','Calls GET /api/schema to load column metadata from both Oracle and Snowflake. Builds drag-drop UI.','GET /api/schema\n  ?source=SCHEMA.ORDERS\n  &dest=DB.SF_SCHEMA.ORDERS\n\n← JDBC DatabaseMetaData\n     .getColumns()\n← JDBC DatabaseMetaData\n     .getPrimaryKeys()')">
+          <div class="node-title">[Configure] click</div>
+          <div class="node-detail">GET /api/schema → metadata</div>
+        </div>
+        <div class="node browser" id="n_drag" onclick="showTip(this,'Drag & Drop Zones (SortableJS)','Three zones: AVAILABLE, PK (primary keys), HASH (columns to include in hash). User drags columns between zones. PK zone shows order numbers.','Sortable.create(availZone, {group:\'cols\'})\nSortable.create(pkZone, {group:\'cols\'})\nSortable.create(hashZone, {group:\'cols\'})\n// onEnd → updatePkPreview()\n//       → markCurrentTableModified()')">
+          <div class="node-title">Drag &amp; Drop Zones</div>
+          <div class="node-detail">AVAILABLE │ PK │ HASH<br>(SortableJS)</div>
+        </div>
+        <div class="node sqlite" id="n_ls" onclick="showTip(this,'localStorage Persistence','Per-table configs (PK, hashColumns, modifiedColumn, bufferMinutes) saved to localStorage. Survives browser refresh and service restarts.','savedTableConfigs[TABLE] = {\n  primaryKeys: \"COL1~COL2\",\n  hashColumns: [\"COL1\",\"COL2\",...],\n  modifiedColumn: \"UPDATED_AT\",\n  bufferMinutes: 15\n}')">
+          <div class="node-title">localStorage Save</div>
+          <div class="node-detail">savedTableConfigs per table</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Job Launch + ReconcilerService -->
+  <div class="section-label">Job Execution Pipeline</div>
+  <div class="row-group">
+
+    <!-- L4 JOB LAUNCH -->
+    <div class="layer" id="layer4" style="min-width:420px">
+      <div class="layer-title" style="color:#f87171">Layer 4 — Job Launch</div>
+      <div class="layer-nodes">
+        <div class="node oracle" id="n_single" onclick="showTip(this,'POST /api/start-job (Single Table)','Runs a single table comparison. JobConfig is built from the PK/hash config panel.','POST /api/start-job\n{\n  sourceTable: \"SCHEMA.ORDERS\",\n  destTable: \"DB.SF.ORDERS\",\n  primaryKeys: \"ORDER_ID\",\n  hashColumns: [\"AMOUNT\",\"STATUS\",...],\n  modifiedColumn: \"UPDATED_AT\",\n  bufferMinutes: 15\n}')">
+          <div class="node-title">Single Table</div>
+          <div class="node-detail">POST /api/start-job</div>
+          <div class="node-badge">startJob(config)</div>
+        </div>
+        <div class="node snowflake" id="n_batch" onclick="showTip(this,'POST /api/start-batch (Multiple Tables)','Runs multiple tables in parallel. tableConfigs map overrides PK/hash per table.','POST /api/start-batch\n{\n  sourceSchemas: [\"SCHEMA1\",\"SCHEMA2\"],\n  destSchema: \"SF_SCHEMA\",\n  tables: [\"ORDERS\",\"CUSTOMERS\"],\n  tableConfigs: {\n    \"ORDERS\": {primaryKeys:\"ORDER_ID\",...}\n  },\n  clearBefore: true\n}')">
+          <div class="node-title">Batch Tables</div>
+          <div class="node-detail">POST /api/start-batch</div>
+          <div class="node-badge">startBatch(request)</div>
+        </div>
+        <div class="node spring" id="n_ctrl" onclick="showTip(this,'ReconcilerController','Spring @RestController. Routes HTTP requests to ReconcilerService. Returns HTTP 409 if job already running.','@RestController\n@RequestMapping(\"/api\")\npublic class ReconcilerController {\n  @PostMapping(\"/start-batch\")\n  public ResponseEntity<?> startBatch(\n    @RequestBody BatchRunRequest req) {\n      boolean started = service.startBatch(req);\n      if (!started) return 409 CONFLICT;\n      return 202 ACCEPTED;\n  }\n}')">
+          <div class="node-title">ReconcilerController</div>
+          <div class="node-detail">@RestController</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L5 SERVICE -->
+    <div class="layer" id="layer5" style="flex:1;min-width:700px">
+      <div class="layer-title" style="color:#a78bfa">Layer 5 — ReconcilerService: Orchestration</div>
+      <div class="layer-nodes">
+        <div class="node spring" id="n_svc" onclick="showTip(this,'ReconcilerService','@Service. Manages AtomicReference<JobStatus>. Guard: returns false if already RUNNING (→ HTTP 409).','@Service\npublic class ReconcilerService {\n  private final AtomicReference<JobStatus>\n    status = new AtomicReference<>(JobStatus.idle());\n  \n  public boolean startBatch(BatchRunRequest req) {\n    if (\"RUNNING\".equals(status.get().status()))\n      return false; // 409\n    status.set(JobStatus.running());\n    Thread.ofVirtual().start(() -> runBatch());\n    return true;\n  }\n}')">
+          <div class="node-title">ReconcilerService</div>
+          <div class="node-detail">AtomicReference&lt;JobStatus&gt;</div>
+        </div>
+        <div class="node sqlite" id="n_sanitize" onclick="showTip(this,'sanitizeConfig()','Removes modifiedColumn from hashColumns to eliminate CDC timestamp noise. Example: if UPDATED_AT is both the buffer filter and a hash column, it is auto-removed from the hash.','// CDC False-Positive Prevention:\n// modifiedColumn UPDATED_AT would drift\n// between Oracle & Snowflake due to\n// replication lag — removing it from hash\n// prevents noisy HASH_MISMATCH records.\nfiltered = hashColumns.stream()\n  .filter(c -> !c.equalsIgnoreCase(modifiedColumn))\n  .toList();')">
+          <div class="node-title">sanitizeConfig()</div>
+          <div class="node-detail">Remove modifiedColumn<br>from hashColumns</div>
+        </div>
+        <div class="node neutral" id="n_resolve" onclick="showTip(this,'resolveTables()','Finds Oracle ∩ Snowflake tables for the given schemas/mappings. Three paths: sourceSchemas[], schemaIds[], or legacy single-schema.','// Path A: sourceSchemas provided\nlistOracleTables(srcSchema) ∩\nlistSnowflakeTables(dstSchema)\n\n// Path B: schemaIds (application.yml mappings)\nprops.mappingById().get(schemaId)\n→ use mapping.oracleSchema &\n   mapping.snowflakeSchema\n\n// Path C: legacy\nreq.sourceSchema ∩ req.destSchema')">
+          <div class="node-title">resolveTables()</div>
+          <div class="node-detail">oracle ∩ snowflake<br>per schema mapping</div>
+        </div>
+        <div class="node browser" id="n_parallel" onclick="showTip(this,'Virtual Thread Parallelism','Java 21 virtual threads. ExecutorCompletionService submits all tables simultaneously. Max 8 concurrent tables. Results accumulated via completion.take().','int parallelism = Math.min(8, tables.size());\nvar exec = Executors\n  .newVirtualThreadPerTaskExecutor();\nvar completion = \n  new ExecutorCompletionService<>(exec);\n\nfor (JobConfig cfg : configs)\n  completion.submit(() -> runSingleTable(cfg));\n\n// Drain results:\nfor (int i = 0; i < configs.size(); i++)\n  TableRunResult r = completion.take().get();')">
+          <div class="node-title">Virtual Threads</div>
+          <div class="node-detail">min(8, N) parallel<br>ExecutorCompletionService</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="node snowflake" id="n_vt1" style="min-width:100px">
+            <div class="node-title">VT-1 TABLE_A</div>
+          </div>
+          <div class="node snowflake" id="n_vt2" style="min-width:100px">
+            <div class="node-title">VT-2 TABLE_B</div>
+          </div>
+          <div class="node snowflake" id="n_vt3" style="min-width:100px">
+            <div class="node-title">VT-N TABLE_N</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Zipper + Oracle Iterator + Snowflake Iterator -->
+  <div class="section-label">Core Comparison Engine (per table)</div>
+  <div class="row-group">
+
+    <!-- L6 ZIPPER -->
+    <div class="layer" id="layer6" style="min-width:380px">
+      <div class="layer-title" style="color:#f97316">Layer 6 — CompareEngine: Sort-Merge Zipper</div>
+      <div class="layer-nodes" style="flex-direction:column;gap:6px">
+        <div class="node oracle" id="n_ce" onclick="showTip(this,'CompareEngine.run()','Core sort-merge zipper. Opens Oracle + Snowflake connections. Streams both iterators simultaneously. O(n) time, O(1) memory.','try (Connection srcConn = openSource();\n     Connection dstConn = openDest();\n     OracleBatchIterator srcIter = new OracleBatchIterator(srcConn, config);\n     SnowflakeRowIterator dstIter = SnowflakeRowIterator.open(dstConn,...)) {\n\n  Row src = srcIter.next();\n  Row dst = dstIter.next();\n  while (src != null || dst != null) { ... }\n}')">
+          <div class="node-title">CompareEngine.run()</div>
+          <div class="node-detail">Opens both connections<br>Runs zipper loop</div>
+        </div>
+
+        <!-- ZIPPER DECISION -->
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="node sqlite" id="n_zip" onclick="showTip(this,'pkComposite Comparison','Core comparison. pkComposite is a ~-delimited string of PK column values cast to VARCHAR. compareTo() determines zipper direction.','int cmp = src.pkComposite()\n            .compareTo(dst.pkComposite());\n\nif (cmp == 0)  → compare hashes\nif (cmp < 0)   → MISSING_IN_DEST\nif (cmp > 0)   → MISSING_IN_SOURCE\n\n// pkComposite example:\n// \"42~NEW_YORK\" for (ORDER_ID=42, CITY=\'NEW_YORK\')')">
+            <div class="node-title">⬡ compare pkComposite</div>
+            <div class="node-detail">compareTo() zipper decision</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="node browser" id="n_match" onclick="showTip(this,'Hash Match (no diff)','Both PKs match AND both hashes match → advance both iterators. No record written.','if (src.rowHash().equalsIgnoreCase(\n    dst.rowHash())) {\n  // ✓ no diff — advance both\n  srcRow = srcIter.hasNext() ?\n           srcIter.next() : null;\n  destRow = dstIter.hasNext() ?\n            dstIter.next() : null;\n}')">
+              <div class="node-title">✓ Match</div>
+              <div class="node-detail">advance both</div>
+            </div>
+            <div class="node oracle" id="n_mismatch" onclick="showTip(this,'HASH_MISMATCH','Same PK but different MD5 hash → calls detectChangedColumns() then records diff.','diffCount++;\nString cols = detectChangedColumns(\n  srcConn, dstConn,\n  src.pkComposite(),\n  srcCols, dstCols);\nbatch.add(new DiffRecord(\n  tableName,\n  src.pkComposite(),\n  \"HASH_MISMATCH\",\n  src.rowHash(), dst.rowHash(), cols));')">
+              <div class="node-title">HASH_MISMATCH</div>
+              <div class="node-detail">detectChangedCols()</div>
+            </div>
+            <div class="node warn" id="n_miss_dest" onclick="showTip(this,'MISSING_IN_DEST','Source PK is smaller than dest PK → this row exists in Oracle but not in Snowflake.','// src PK \"10\" < dst PK \"15\"\n// → row 10 is in Oracle but not Snowflake\nbatch.add(new DiffRecord(\n  tableName,\n  src.pkComposite(),\n  \"MISSING_IN_DEST\",\n  src.rowHash(), null, null));\nsrcRow = srcIter.next();')">
+              <div class="node-title">MISSING_IN_DEST</div>
+              <div class="node-detail">src PK &lt; dst PK</div>
+            </div>
+            <div class="node snowflake" id="n_miss_src" onclick="showTip(this,'MISSING_IN_SOURCE','Dest PK is smaller than source PK → this row exists in Snowflake but not in Oracle.','// dst PK \"5\" < src PK \"10\"\n// → row 5 is in Snowflake but not Oracle\nbatch.add(new DiffRecord(\n  tableName,\n  dst.pkComposite(),\n  \"MISSING_IN_SOURCE\",\n  null, dst.rowHash(), null));\ndestRow = dstIter.next();')">
+              <div class="node-title">MISSING_IN_SOURCE</div>
+              <div class="node-detail">dst PK &lt; src PK</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="node sqlite" id="n_flush" onclick="showTip(this,'Batch Flush to SQLite','Every 5,000 diff records: calls diffRepo.insertBatch(). Every 100,000 rows: updates live status via AtomicReference.','private static final int BATCH_FLUSH = 5_000;\n\n// In zipper loop:\nif (batch.size() >= BATCH_FLUSH) {\n  diffRepo.insertBatch(jobTs, batch);\n  batch.clear();\n}\n\n// Status update:\nif ((srcCount+destCount) % 100_000 == 0) {\n  statusRef.set(new JobStatus(\n    \"RUNNING\", srcCount, destCount,\n    diffCount, null));\n}')">
+          <div class="node-title">Batch Flush</div>
+          <div class="node-detail">every 5K diffs → SQLite<br>every 100K rows → status</div>
+        </div>
+
+        <!-- Live zipper visualiser -->
+        <div class="zipper-vis" id="zipperVis">
+          <div style="color:#475569;font-size:10px">⚡ Zipper output appears here during simulation...</div>
+        </div>
+        <div class="counters" id="zipCounters" style="display:none">
+          <span class="counter-badge cb-match" id="cnt_match">✓ Match: 0</span>
+          <span class="counter-badge cb-mismatch" id="cnt_mismatch">≠ Mismatch: 0</span>
+          <span class="counter-badge cb-miss-d" id="cnt_miss_d">↑ Missing Dest: 0</span>
+          <span class="counter-badge cb-miss-s" id="cnt_miss_s">↓ Missing Src: 0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- L7 ORACLE ITERATOR -->
+    <div class="layer" id="layer7" style="min-width:360px">
+      <div class="layer-title" style="color:#f97316">Layer 7 — OracleBatchIterator (keyset pagination)</div>
+      <div class="layer-nodes" style="flex-direction:column;gap:6px">
+        <div class="node oracle" id="n_ora_iter" onclick="showTip(this,'OracleBatchIterator','Constructor: loads column type map, builds both SQL templates, pre-compiles as PreparedStatements. Only 2 Oracle SQL parses for entire table scan.','// Constructor builds 2 templates:\n// 1. firstPageSql  (no seek)\n// 2. seekPageSql   (keyset: pk > ?,?)\n\n// BATCH_SIZE default = 50,000 rows\n// Set via: ORACLE_BATCH_SIZE env var\n\nfirstPagePs = conn.prepareStatement(firstSql);\nseekPagePs  = conn.prepareStatement(seekSql);\nfirstPagePs.setFetchSize(BATCH_SIZE);\nseekPagePs.setFetchSize(BATCH_SIZE);')">
+          <div class="node-title">OracleBatchIterator</div>
+          <div class="node-detail">Pre-compiles 2 SQL templates<br>BATCH_SIZE = 50,000</div>
+        </div>
+        <div class="node oracle" id="n_first_page" onclick="showTip(this,'firstPageSql (Page 1)','No keyset condition. Simple SELECT with ORDER BY and FETCH FIRST N.','SELECT\n  CAST(pk_col AS VARCHAR2(4000))\n    || \'~\' || ...  AS pk_composite,\n  RAWTOHEX(STANDARD_HASH(\n    NVL(CAST(col AS VARCHAR2(4000)),\'NULL_STR\')\n    || \'~\' || ..., \'MD5\'))\n    AS row_hash,\n  pk_col1, pk_col2\nFROM SCHEMA.ORDERS\n[WHERE modified < NOW - INTERVAL \'15\' MINUTE]\nORDER BY pk_col1, pk_col2\nFETCH FIRST 50000 ROWS ONLY')">
+          <div class="node-title">firstPageSql</div>
+          <div class="node-detail">No seek condition<br>FETCH FIRST 50000</div>
+          <div class="node-badge">Page 1 only</div>
+        </div>
+        <div class="node oracle" id="n_seek_page" onclick="showTip(this,'seekPageSql (Page 2+)','Keyset pagination: WHERE (pk1,pk2) > (?,?). Oracle resolves to B-tree index range scan. Type-safe bind via setObject(i, lastPkObjects[i]).','SELECT ... FROM SCHEMA.ORDERS\nWHERE [modified < NOW - 15min AND]\n      (pk_col1, pk_col2) > (?, ?)\n      -- ↑ typed row-value constructor\n      -- Oracle 12c+: index range scan\nORDER BY pk_col1, pk_col2\nFETCH FIRST 50000 ROWS ONLY\n\n// Bind type-safe Java objects:\n// Long for NUMBER, String for VARCHAR2,\n// Timestamp for DATE/TIMESTAMP')">
+          <div class="node-title">seekPageSql</div>
+          <div class="node-detail">(pk1,pk2) &gt; (?,?) keyset<br>typed bind params</div>
+          <div class="node-badge">Page 2, 3, ... N</div>
+        </div>
+        <div class="node neutral" id="n_hash_norm_ora" onclick="showTip(this,'Hash Normalization (Oracle)','Type-aware normalization ensures Oracle and Snowflake produce identical hash inputs for semantically equal values.','NUMBER/DECIMAL:\n  NVL(REGEXP_REPLACE(\n    REGEXP_REPLACE(\n      CAST(col AS VARCHAR2(4000)),\n      \'(\\.\\d*?)0+$\', \'\\1\'),\n    \'\\.$\', \'\'), \'NULL_NUM\')\n// strips trailing zeros: 3.50 → 3.5\n\nTIMESTAMP/DATE:\n  NVL(TO_CHAR(col, \'YYYY-MM-DD\'), \'NULL_DATE\')\n\nother:\n  NVL(CAST(col AS VARCHAR2(4000)), \'NULL_STR\')\n\n→ RAWTOHEX(STANDARD_HASH(expr, \'MD5\'))')">
+          <div class="node-title">Hash Normalization</div>
+          <div class="node-detail">NUMBER → strip trailing 0s<br>DATE → YYYY-MM-DD<br>→ STANDARD_HASH MD5</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L8 SNOWFLAKE ITERATOR -->
+    <div class="layer" id="layer8" style="min-width:360px">
+      <div class="layer-title" style="color:#38bdf8">Layer 8 — SnowflakeRowIterator (Arrow chunks)</div>
+      <div class="layer-nodes" style="flex-direction:column;gap:6px">
+        <div class="node snowflake" id="n_sf_iter" onclick="showTip(this,'SnowflakeRowIterator.open()','Executes full sorted query on Snowflake warehouse. Result materialised as Arrow chunks in cloud storage. Then splits into ~50MB chunk descriptors.','SnowflakeQueryStrategy strategy = new ...;\nString sql = strategy.buildHashQuery(config);\nResultSet rs = stmt.executeQuery(sql);\n// ← Warehouse executes ORDER BY server-side\n// ← Arrow chunks stored in cloud storage\n\nSnowflakeResultSet sfRs =\n  rs.unwrap(SnowflakeResultSet.class);\nthis.chunks =\n  sfRs.getResultSetSerializables(50_MB);\n// ← Only metadata pointers, no row data yet\nlog.info(\"{} chunks of ~50MB\", chunks.size());')">
+          <div class="node-title">SnowflakeRowIterator</div>
+          <div class="node-detail">Submits full ORDER BY<br>Splits into Arrow chunks</div>
+        </div>
+        <div class="node snowflake" id="n_sf_sql" onclick="showTip(this,'Snowflake Hash Query','Full ORDER BY executed server-side on Snowflake warehouse. CDC buffer applied via DATEADD.','SELECT\n  CAST(pk_col AS VARCHAR(4000))\n    || \'~\' || ...  AS pk_composite,\n  MD5(\n    IFNULL(REGEXP_REPLACE(\n      CAST(num_col AS VARCHAR(4000)),\n      \'(\\.\\d*?)0+$\', \'\\1\'), \'NULL_NUM\')\n    || \'~\' || ...\n  ) AS row_hash\nFROM SF_DB.SF_SCHEMA.ORDERS\n[WHERE modified < DATEADD(\'MINUTE\',-15,NOW())]\n[AND dest_filter_col = \'value\']\nORDER BY pk_col1, pk_col2')">
+          <div class="node-title">Snowflake Hash Query</div>
+          <div class="node-detail">MD5() pushdown<br>ORDER BY server-side</div>
+        </div>
+        <div class="node neutral" id="n_chunks" onclick="showTip(this,'Arrow Chunk Streaming','Snowflake splits the full result into N chunks of ~50MB each. getResultSet(Properties) downloads and decompresses one chunk at a time.','// chunk metadata only — no data yet:\nList<SnowflakeResultSetSerializable> chunks\n  = sfRs.getResultSetSerializables(50_MB);\n\n// advance() per hasNext() call:\nif (currentChunkRs.next()) {\n  // read by column INDEX (aliases unreliable)\n  nextRow = new Row(\n    rs.getString(1), // pk_composite\n    rs.getString(2)  // row_hash\n  );\n} else {\n  closeCurrentChunk();\n  chunkIdx++;\n  // download + decompress next ~50MB chunk\n  currentChunkRs =\n    chunks.get(chunkIdx).getResultSet(props);\n}')">
+          <div class="node-title">Arrow Chunks</div>
+          <div class="node-detail">N × ~50MB metadata ptrs<br>1 chunk decompressed at a time</div>
+        </div>
+        <div class="node warn" id="n_mem" onclick="showTip(this,'Memory Profile ⚠','Only 1 Arrow chunk (~50MB) is decompressed in JVM heap at any moment. All other chunks remain compressed in Snowflake cloud storage.','// JVM heap at any moment:\n// ≤ 50MB decompressed Arrow data\n//\n// SNOWFLAKE_CHUNK_BYTES env var:\n// default = 50 * 1024 * 1024 (50MB)\n//\n// Remaining chunks:\n// → stored encrypted + compressed\n//    in Snowflake cloud storage\n// → only downloaded when needed')">
+          <div class="node-title">⚠ Memory Profile</div>
+          <div class="node-detail">≤ 1 chunk (~50MB)<br>in JVM heap at once</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 4: N+1 + SQLite -->
+  <div class="section-label">Diff Recording &amp; Column Detection</div>
+  <div class="row-group">
+
+    <!-- L9 N+1 -->
+    <div class="layer" id="layer9" style="min-width:460px;border-color:#dc2626">
+      <div class="layer-title" style="color:#f87171">Layer 9 — detectChangedColumns ⚠ N+1 per HASH_MISMATCH</div>
+      <div class="layer-nodes">
+        <div class="node warn" id="n_n1" onclick="showTip(this,'⚠ N+1 Problem — detectChangedColumns()','Called INLINE inside the hot zipper loop for every single HASH_MISMATCH row. 100K mismatches = 200K extra JDBC round-trips. Proposed fix: deferred bulk batch query post-zipper.','// Called INLINE in zipper loop:\nString changedCols = detectChangedColumns(\n  srcConn, dstConn,\n  src.pkComposite(),\n  srcCols, dstCols);\n\n// For 100K mismatches:\n// = 100K × Oracle point query\n// + 100K × Snowflake point query\n// = 200K extra JDBC calls ⚠\n\n// Proposed fix:\n// Collect mismatch PKs during zipper,\n// run batch IN (...) queries post-zipper')">
+          <div class="node-title">⚠ N+1 Inline Call</div>
+          <div class="node-detail">Called per HASH_MISMATCH row<br>100K mismatches = 200K queries</div>
+        </div>
+        <div class="node oracle" id="n_fetch_ora" onclick="showTip(this,'fetchRowAsStrings() — Oracle','Point lookup for a single row by PK. Returns all hash+modified columns as strings.','SELECT\n  CAST(AMOUNT AS VARCHAR2(4000)) AS AMOUNT,\n  CAST(STATUS AS VARCHAR2(4000)) AS STATUS,\n  CAST(UPDATED_AT AS VARCHAR2(4000)) AS UPDATED_AT\nFROM SCHEMA.ORDERS\nWHERE ORDER_ID = ?\nFETCH FIRST 1 ROWS ONLY')">
+          <div class="node-title">Oracle Point Query</div>
+          <div class="node-detail">WHERE pk=? FETCH FIRST 1<br>→ {col: val} map</div>
+        </div>
+        <div class="node snowflake" id="n_fetch_sf" onclick="showTip(this,'fetchRowAsStrings() — Snowflake','Same point lookup on Snowflake side.','SELECT\n  CAST(AMOUNT AS VARCHAR(4000)) AS AMOUNT,\n  CAST(STATUS AS VARCHAR(4000)) AS STATUS,\n  CAST(UPDATED_AT AS VARCHAR(4000)) AS UPDATED_AT\nFROM SF_DB.SF_SCHEMA.ORDERS\nWHERE ORDER_ID = ?\nLIMIT 1')">
+          <div class="node-title">Snowflake Point Query</div>
+          <div class="node-detail">WHERE pk=? LIMIT 1<br>→ {col: val} map</div>
+        </div>
+        <div class="node neutral" id="n_valnorm" onclick="showTip(this,'ValueNormalizer.normalize()','Type-aware string normalization before comparison. Handles trailing zeros, timestamp precision, null values.','normalize(\"3.50\", \"NUMBER\")  → \"3.5\"\nnormalize(\"3.5\",  \"NUMBER\")  → \"3.5\"  ✓\n\nnormalize(\"2026-07-11 00:00:00\", \"DATE\")\n  → \"2026-07-11\"\nnormalize(\"2026-07-11\", \"DATE\")\n  → \"2026-07-11\"  ✓\n\nnormalize(null, ...) → \"\"\n\n// Returns changed column names:\n// e.g. \"STATUS,UPDATED_AT\"')">
+          <div class="node-title">ValueNormalizer</div>
+          <div class="node-detail">Normalize per type<br>→ "STATUS,AMOUNT"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L10 SQLITE -->
+    <div class="layer" id="layer10" style="min-width:440px">
+      <div class="layer-title" style="color:#facc15">Layer 10 — DiffRepository (SQLite)</div>
+      <div class="layer-nodes">
+        <div class="node sqlite" id="n_repo" onclick="showTip(this,'DiffRepository.insertBatch()','synchronized method. Opens a new SQLite connection, sets autoCommit=false, batch inserts all records, commits. All 8 parallel table threads contend on this lock.','public synchronized void insertBatch(\n    String jobTs, List<DiffRecord> records) {\n  String sql = \"INSERT INTO diffs(...) VALUES(?,?,?,?,?,?,?)\";\n  try (Connection c = conn();\n       PreparedStatement ps = c.prepareStatement(sql)) {\n    c.setAutoCommit(false);\n    for (DiffRecord r : records) {\n      ps.setString(1, jobTs);\n      ps.setString(2, r.tableName());\n      // ...\n      ps.addBatch();\n    }\n    ps.executeBatch();\n    c.commit();\n  }\n}')">
+          <div class="node-title">insertBatch()</div>
+          <div class="node-detail">synchronized<br>JDBC batch INSERT</div>
+        </div>
+        <div class="node warn" id="n_lock" onclick="showTip(this,'⚠ Single Synchronized Lock','All 8 parallel table virtual threads call insertBatch() which is synchronized. They all block waiting for the JVM monitor. Under 8 parallel tables with 5K flush batches, this is the main throughput bottleneck.\n\nProposed fix: WAL mode + async writer thread via BlockingQueue.','// Current:\npublic synchronized void insertBatch(...)\n// 8 threads → all wait on 1 JVM monitor\n\n// Proposed fix:\n// PRAGMA journal_mode=WAL;\n// PRAGMA synchronous=NORMAL;\nBlockingQueue<List<DiffRecord>> writeQueue;\nThread writerThread = Thread.ofVirtual()\n  .start(this::drainWriteQueue);\n// → 0 lock contention, full parallel throughput')">
+          <div class="node-title">⚠ Single Lock</div>
+          <div class="node-detail">8 threads contend<br>on 1 synchronized mutex</div>
+        </div>
+        <div class="node sqlite" id="n_sqlite_schema" onclick="showTip(this,'SQLite diffs Table Schema','Stores all diff records. Three indexes: pk_composite, diff_type, table_name.','TABLE diffs:\n  id             INTEGER PK AUTOINCREMENT\n  job_ts         TEXT  (Instant.now() at start)\n  table_name     TEXT  ← INDEX\n  pk_composite   TEXT  ← INDEX  (\"val1~val2\")\n  diff_type      TEXT  ← INDEX\n    HASH_MISMATCH | MISSING_IN_DEST\n    | MISSING_IN_SOURCE\n  source_hash    TEXT  (Oracle MD5 hex)\n  dest_hash      TEXT  (Snowflake MD5 hex)\n  changed_columns TEXT (\"COL_A,COL_B\")\n  created_at     TEXT  (datetime(\'now\'))')">
+          <div class="node-title">TABLE diffs</div>
+          <div class="node-detail">id, job_ts, table_name,<br>pk_composite, diff_type,<br>source_hash, dest_hash,<br>changed_columns</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 5: Live polling + Diff Modal -->
+  <div class="section-label">Results & UI Updates</div>
+  <div class="row-group">
+
+    <!-- L11 POLLING -->
+    <div class="layer" id="layer11" style="flex:1;min-width:900px">
+      <div class="layer-title" style="color:#4ade80">Layer 11 — Live Polling (every 2 seconds)</div>
+      <div class="layer-nodes" style="flex-wrap:wrap;gap:8px">
+        <div class="node browser" id="n_poll_get" onclick="showTip(this,'GET /api/results','Called every 2 seconds. Returns paginated diff rows + live JobStatus + tableSummaries grouped by diff type + per-table row counts.','GET /api/results\n  ?page=1&size=100\n  &search=searchTerm\n  &table=ORDERS\n\nResponse:\n{\n  status: \"RUNNING\",\n  sourceCount: 50000,\n  destCount: 49800,\n  diffCount: 12,\n  totalRows: 12,\n  tableOptions: [\"ORDERS\",\"CUSTOMERS\"],\n  tableSummaries: [{tableName,total,\n    hashMismatch,missingInDest,...}],\n  rows: [{id,tableName,pkComposite,\n          diffType,sourceHash,...}]\n}')">
+          <div class="node-title">GET /api/results</div>
+          <div class="node-detail">page + search + table filter</div>
+        </div>
+        <div class="node sqlite" id="n_db_fetch" onclick="showTip(this,'diffRepo.fetch()','Paginated SELECT from SQLite diffs table. Supports table filter and full-text search on pk_composite, diff_type, changed_columns, table_name.','SELECT id, job_ts, table_name,\n  pk_composite, diff_type,\n  source_hash, dest_hash,\n  changed_columns, created_at\nFROM diffs\n[WHERE table_name = ?]\n[AND (pk_composite LIKE ? OR\n     diff_type LIKE ? OR\n     changed_columns LIKE ?)]\nORDER BY id DESC\nLIMIT 100 OFFSET N')">
+          <div class="node-title">diffRepo.fetch()</div>
+          <div class="node-detail">SELECT paginated rows<br>search + table filter</div>
+        </div>
+        <div class="node spring" id="n_status_r" onclick="showTip(this,'service.currentStatus()','Reads AtomicReference<JobStatus>. Updated by CompareEngine every 100K processed rows and at job completion.','// AtomicReference — lock-free reads:\nJobStatus s = status.get();\n\n// Updated in CompareEngine:\nstatusRef.set(new JobStatus(\n  \"RUNNING\",\n  srcCount, destCount,\n  diffCount, null));\n\n// On completion:\nstatusRef.set(new JobStatus(\n  \"COMPLETED\",\n  srcCount, destCount,\n  diffCount, null));')">
+          <div class="node-title">currentStatus()</div>
+          <div class="node-detail">AtomicReference read<br>updated every 100K rows</div>
+        </div>
+        <div class="node sqlite" id="n_summaries" onclick="showTip(this,'diffRepo.tableSummaries()','Aggregates diff counts per table_name. Used to populate the accordion panels with per-table breakdown.','SELECT table_name,\n  COUNT(*) AS total,\n  SUM(CASE WHEN diff_type = \'HASH_MISMATCH\'\n      THEN 1 ELSE 0 END) AS hash_mismatch,\n  SUM(CASE WHEN diff_type = \'MISSING_IN_DEST\'\n      THEN 1 ELSE 0 END) AS missing_in_dest,\n  SUM(CASE WHEN diff_type = \'MISSING_IN_SOURCE\'\n      THEN 1 ELSE 0 END) AS missing_in_source\nFROM diffs\nGROUP BY table_name\nORDER BY table_name')">
+          <div class="node-title">tableSummaries()</div>
+          <div class="node-detail">GROUP BY table_name<br>SUM per diff_type</div>
+        </div>
+        <div class="node browser" id="n_grid" onclick="showTip(this,'AG Grid Update','gridApi.setGridOption(\'rowData\', rows) replaces the grid rows. AG Grid animates row transitions. Diff badges colored by type: amber=HASH_MISMATCH, red=MISSING_IN_DEST, blue=MISSING_IN_SOURCE.','gridApi.setGridOption(\'rowData\', data.rows);\n\n// Diff type badge colors:\n// HASH_MISMATCH   → badge-amber\n// MISSING_IN_DEST → badge-red\n// MISSING_IN_SOURCE → badge-blue')">
+          <div class="node-title">AG Grid Update</div>
+          <div class="node-detail">setGridOption rowData<br>diff badges by type</div>
+        </div>
+        <div class="node browser" id="n_chart" onclick="showTip(this,'Chart.js Live Chart','pushLiveDiffPoint() adds a tick to the line chart. Per-table scope switching. Up to 60 ticks kept. Deduplication: skips identical consecutive points. Persisted to localStorage.','pushLiveDiffPoint(\n  scope,     // \"ORDERS\" or \"__ALL__\"\n  status,    // \"RUNNING\"\n  totalCompared,\n  missingSrc,\n  missingDest,\n  hashMismatch\n);\n\n// localStorage persistence:\n// survives page refresh\n// chartScopes[scope] = {\n//   labels, totalCompared,\n//   missingSrc, missingDest,\n//   differences\n// }')">
+          <div class="node-title">Chart.js Tick</div>
+          <div class="node-detail">pushLiveDiffPoint()<br>per-table scope</div>
+        </div>
+        <div class="node browser" id="n_panels" onclick="showTip(this,'renderTablePanels()','Bootstrap accordion, one panel per table. Clicking a panel header sets the table filter. Shows diff count badges. ACTIVE badge on currently filtered table.','renderTablePanels(\n  summaries, activeTable, activeSearch);\n\n// Each panel shows:\n// Total | Mismatch | Missing Dest | Missing Src\n// Clicking panel: focusTableFromPanel()\n//   → sets tableFilterSelect.value\n//   → calls loadResults()')">
+          <div class="node-title">Table Panels</div>
+          <div class="node-detail">Bootstrap accordion<br>per-table diff counts</div>
+        </div>
+        <div class="node warn" id="n_stop" onclick="showTip(this,'Poll Stop Condition','Polling automatically stops when status is COMPLETED, FAILED, or IDLE. Operator can use Clear Results to reset to IDLE.','if ([\'COMPLETED\',\'FAILED\',\'IDLE\']\n    .includes(data.status) &&\n    pollInterval) {\n  clearInterval(pollInterval);\n  pollInterval = null;\n}\n\n// Status badge:\n// IDLE      → badge-blue\n// RUNNING   → badge-amber (pulsing)\n// COMPLETED → badge-green\n// FAILED    → badge-red')">
+          <div class="node-title">Stop Condition</div>
+          <div class="node-detail">COMPLETED/FAILED/IDLE<br>→ clearInterval()</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L12 MODAL -->
+    <div class="layer" id="layer12" style="min-width:300px">
+      <div class="layer-title" style="color:#a78bfa">Layer 12 — Diff Details Modal</div>
+      <div class="layer-nodes" style="flex-direction:column;gap:6px">
+        <div class="node spring" id="n_view" onclick="showTip(this,'[View] Button — openDiffModal()','User clicks View in AG Grid row. Calls GET /api/diff-details with the pkComposite and tableName.','// cellRenderer in AG Grid:\np => `<button onclick=\"openDiffModal(\n  \'${p.data.pkComposite}\',\n  \'${p.data.tableName}\')\">View</button>`\n\n// Calls:\nGET /api/diff-details\n  ?pk=42~NEW_YORK\n  &table=ORDERS')">
+          <div class="node-title">[View] click</div>
+          <div class="node-detail">openDiffModal(pk, table)</div>
+        </div>
+        <div class="node warn" id="n_two_conn" onclick="showTip(this,'⚠ Two Fresh DB Connections','Each modal open creates 2 fresh DriverManager connections (1 Oracle + 1 Snowflake). No connection pool. Multiple concurrent modal opens can exhaust Oracle connections.','// Current — no pooling:\ntry (Connection src = DriverManager\n       .getConnection(oracle.jdbcUrl, ...);\n     Connection dst = DriverManager\n       .getConnection(snowflake.jdbcUrl, ...)) {\n  fetchRowAsStrings(src, ...);\n  fetchRowAsStrings(dst, ...);\n}\n\n// Proposed fix:\n// HikariCP pool with maxPoolSize=20')">
+          <div class="node-title">⚠ 2 Fresh Connections</div>
+          <div class="node-detail">DriverManager per call<br>no connection pool</div>
+        </div>
+        <div class="node neutral" id="n_modal_out" onclick="showTip(this,'Modal Output — Side-by-Side','Shows all hashColumns + modifiedColumn. Rows highlighted yellow if different. ValueNormalizer applied before comparison.','// Modal table:\n┌──────────┬───────────┬──────────┬─────┐\n│ COLUMN   │ ORACLE    │SNOWFLAKE │DIFF?│\n├──────────┼───────────┼──────────┼─────┤\n│ AMOUNT   │ 99.99     │ 99.99    │ NO  │\n│ STATUS   │ SHIPPED   │ PENDING  │ YES │\n│ UPDATED_AT│2026-07-11│2026-07-10│ YES │\n└──────────┴───────────┴──────────┴─────┘\n\n// Proposed improvement:\n// diff-match-patch.js for char-level\n// side-by-side Git-style diff')">
+          <div class="node-title">Side-by-Side Table</div>
+          <div class="node-detail">COLUMN │ ORACLE │ SF │ DIFF?<br>rows highlight on mismatch</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOOLTIP -->
+<div id="tooltip">
+  <div class="tt-title" id="tt-title"></div>
+  <div id="tt-body"></div>
+  <pre class="tt-code" id="tt-code"></pre>
+</div>
+
+<script>
+  // ── TOOLTIP ──────────────────────────────────────────────────────────
+  const tooltip = document.getElementById('tooltip');
+  function showTip(el, title, body, code) {
+    document.getElementById('tt-title').textContent = title;
+    document.getElementById('tt-body').textContent = body;
+    document.getElementById('tt-code').textContent = code || '';
+    tooltip.style.display = 'block';
+    positionTip(el);
+  }
+  function positionTip(el) {
+    const r = el.getBoundingClientRect();
+    const tw = 320, th = 300;
+    let left = r.right + 12;
+    let top  = r.top;
+    if (left + tw > window.innerWidth) left = r.left - tw - 12;
+    if (top + th > window.innerHeight) top = window.innerHeight - th - 10;
+    if (top < 10) top = 10;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top  = top  + 'px';
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.node') && !e.target.closest('#tooltip')) {
+      tooltip.style.display = 'none';
+    }
+  });
+  document.addEventListener('scroll', () => { tooltip.style.display = 'none'; }, true);
+
+  // ── SIMULATION ───────────────────────────────────────────────────────
+  let simRunning = false;
+  let simTimer   = null;
+
+  const STEPS = [
+    { label: 'Spring Boot starts',        nodes: ['n_spring'],                layers: ['layer0'] },
+    { label: 'SQLite initialised',         nodes: ['n_sqlite_init','n_appprops','n_idle'], layers: ['layer0'] },
+    { label: 'Browser SPA loads',          nodes: ['n_browser'],              layers: ['layer1'] },
+    { label: 'Load Oracle databases',      nodes: ['n_load_db'],              layers: ['layer1'] },
+    { label: 'Load schema mappings',       nodes: ['n_load_map'],             layers: ['layer1'] },
+    { label: 'Poll /api/results (IDLE)',   nodes: ['n_poll'],                 layers: ['layer1'] },
+    { label: 'User clicks Scan Tables',    nodes: ['n_scan'],                 layers: ['layer2'] },
+    { label: 'Querying Oracle tables',     nodes: ['n_list_ora'],             layers: ['layer2'] },
+    { label: 'Querying Snowflake tables',  nodes: ['n_list_sf'],              layers: ['layer2'] },
+    { label: 'Oracle ∩ Snowflake result',  nodes: ['n_intersect'],            layers: ['layer2'] },
+    { label: 'Configure table PK/Hash',    nodes: ['n_configure','n_drag'],   layers: ['layer3'] },
+    { label: 'Save config to localStorage',nodes: ['n_ls'],                   layers: ['layer3'] },
+    { label: 'POST /api/start-batch',      nodes: ['n_batch'],                layers: ['layer4'] },
+    { label: 'ReconcilerController routes',nodes: ['n_ctrl'],                 layers: ['layer4'] },
+    { label: 'ReconcilerService receives', nodes: ['n_svc'],                  layers: ['layer5'] },
+    { label: 'sanitizeConfig() — remove modifiedColumn from hash', nodes: ['n_sanitize'], layers: ['layer5'] },
+    { label: 'resolveTables() — Oracle ∩ Snowflake', nodes: ['n_resolve'],   layers: ['layer5'] },
+    { label: 'Dispatch virtual threads',   nodes: ['n_parallel','n_vt1','n_vt2','n_vt3'], layers: ['layer5'] },
+    { label: 'CompareEngine.run() starts', nodes: ['n_ce'],                   layers: ['layer6'] },
+    { label: 'Oracle iterator opens',      nodes: ['n_ora_iter','n_first_page'], layers: ['layer7'] },
+    { label: 'Snowflake query submitted',  nodes: ['n_sf_iter','n_sf_sql'],   layers: ['layer8'] },
+    { label: 'Snowflake warehouse executes ORDER BY', nodes: ['n_chunks'],    layers: ['layer8'] },
+    { label: 'Zipper: compare pkComposite', nodes: ['n_zip'],                 layers: ['layer6'], zipper: true },
+    { label: 'Zipper: HASH_MISMATCH detected', nodes: ['n_mismatch'],         layers: ['layer6'] },
+    { label: 'detectChangedColumns — Oracle point query', nodes: ['n_n1','n_fetch_ora'], layers: ['layer9'] },
+    { label: 'detectChangedColumns — Snowflake point query', nodes: ['n_fetch_sf'], layers: ['layer9'] },
+    { label: 'ValueNormalizer compares',   nodes: ['n_valnorm'],              layers: ['layer9'] },
+    { label: 'MISSING_IN_DEST recorded',   nodes: ['n_miss_dest'],            layers: ['layer6'] },
+    { label: 'Batch flush → SQLite insertBatch', nodes: ['n_flush','n_repo'], layers: ['layer6','layer10'] },
+    { label: '⚠ Synchronized lock contention', nodes: ['n_lock'],             layers: ['layer10'] },
+    { label: 'Oracle keyset page 2+ (seekPageSql)', nodes: ['n_seek_page','n_hash_norm_ora'], layers: ['layer7'] },
+    { label: 'Snowflake next Arrow chunk downloaded', nodes: ['n_chunks','n_mem'], layers: ['layer8'] },
+    { label: 'Browser polls /api/results (RUNNING)', nodes: ['n_poll_get'],   layers: ['layer11'] },
+    { label: 'diffRepo.fetch() → paginated rows', nodes: ['n_db_fetch'],      layers: ['layer11'] },
+    { label: 'currentStatus() → RUNNING counts', nodes: ['n_status_r'],       layers: ['layer11'] },
+    { label: 'tableSummaries() → GROUP BY table', nodes: ['n_summaries'],      layers: ['layer11'] },
+    { label: 'AG Grid updates live',       nodes: ['n_grid'],                 layers: ['layer11'] },
+    { label: 'Chart.js adds tick',         nodes: ['n_chart'],                layers: ['layer11'] },
+    { label: 'Table accordion panels update', nodes: ['n_panels'],            layers: ['layer11'] },
+    { label: 'Job COMPLETED — poll stops', nodes: ['n_stop'],                 layers: ['layer11'] },
+    { label: 'User clicks [View] in grid', nodes: ['n_view'],                 layers: ['layer12'] },
+    { label: 'GET /api/diff-details',      nodes: ['n_two_conn'],             layers: ['layer12'] },
+    { label: 'Modal shows side-by-side diff', nodes: ['n_modal_out'],          layers: ['layer12'] },
+  ];
+
+  let cMatch = 0, cMismatch = 0, cMissD = 0, cMissS = 0;
+
+  const ZIPPER_DATA = [
+    { src: 'pk=00001~ORDERS', dst: 'pk=00001~ORDERS', type: 'match' },
+    { src: 'pk=00002~ORDERS', dst: 'pk=00003~ORDERS', type: 'miss_dest' },
+    { src: 'pk=00003~ORDERS', dst: 'pk=00003~ORDERS', type: 'mismatch' },
+    { src: 'pk=00004~ORDERS', dst: 'pk=00004~ORDERS', type: 'match' },
+    { src: '(exhausted)',      dst: 'pk=00005~ORDERS', type: 'miss_src' },
+    { src: 'pk=00006~ORDERS', dst: 'pk=00006~ORDERS', type: 'match' },
+  ];
+  let zipperIdx = 0;
+
+  function getSpeed() {
+    return parseInt(document.getElementById('speedSelect').value);
+  }
+
+  async function simulate() {
+    if (simRunning) return;
+    simRunning = true;
+    resetAll(false);
+    document.getElementById('btnSimulate').disabled = true;
+    document.getElementById('zipCounters').style.display = 'flex';
+    cMatch = cMismatch = cMissD = cMissS = 0;
+    updateCounters();
+
+    const total = STEPS.length;
+    for (let i = 0; i < STEPS.length; i++) {
+      if (!simRunning) break;
+      const step = STEPS[i];
+      document.getElementById('stepLabel').textContent = step.label;
+      document.getElementById('progressFill').style.width = ((i + 1) / total * 100) + '%';
+
+      // Activate nodes
+      step.nodes.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('active');
+      });
+      // Activate layers
+      step.layers.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('active');
+      });
+
+      // Zipper visualiser
+      if (step.zipper && zipperIdx < ZIPPER_DATA.length) {
+        runZipperTick();
+      }
+
+      await sleep(getSpeed());
+
+      // Deactivate previous nodes (keep layer glow for a beat)
+      step.nodes.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+      step.layers.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+    }
+
+    // Final glow on completion
+    document.getElementById('layer11').classList.add('active');
+    document.getElementById('n_stop').classList.add('active');
+    document.getElementById('stepLabel').textContent = '✅ Job Complete!';
+    document.getElementById('progressFill').style.width = '100%';
+
+    document.getElementById('btnSimulate').disabled = false;
+    simRunning = false;
+  }
+
+  function runZipperTick() {
+    const vis = document.getElementById('zipperVis');
+    if (zipperIdx === 0) {
+      vis.innerHTML = '';
+    }
+    // Run a few zipper rows
+    let count = 0;
+    const interval = setInterval(() => {
+      if (zipperIdx >= ZIPPER_DATA.length || count >= 3) {
+        clearInterval(interval);
+        return;
+      }
+      const d = ZIPPER_DATA[zipperIdx++];
+      const row = document.createElement('div');
+      row.className = 'zipper-row';
+      let resultClass, resultText;
+      if (d.type === 'match') {
+        resultClass = 'zr-match'; resultText = '✓ MATCH'; cMatch++;
+      } else if (d.type === 'mismatch') {
+        resultClass = 'zr-mismatch'; resultText = '≠ HASH_MISMATCH'; cMismatch++;
+      } else if (d.type === 'miss_dest') {
+        resultClass = 'zr-miss-dest'; resultText = '↑ MISSING_IN_DEST'; cMissD++;
+      } else {
+        resultClass = 'zr-miss-src'; resultText = '↓ MISSING_IN_SOURCE'; cMissS++;
+      }
+      row.innerHTML = `
+        <span class="zr-src">${d.src}</span>
+        <span style="color:#475569">│</span>
+        <span class="zr-dst">${d.dst}</span>
+        <span class="zr-result ${resultClass}">${resultText}</span>
+      `;
+      vis.appendChild(row);
+      vis.scrollTop = vis.scrollHeight;
+      updateCounters();
+      count++;
+    }, 180);
+  }
+
+  function updateCounters() {
+    document.getElementById('cnt_match').textContent    = `✓ Match: ${cMatch}`;
+    document.getElementById('cnt_mismatch').textContent = `≠ Mismatch: ${cMismatch}`;
+    document.getElementById('cnt_miss_d').textContent   = `↑ Missing Dest: ${cMissD}`;
+    document.getElementById('cnt_miss_s').textContent   = `↓ Missing Src: ${cMissS}`;
+  }
+
+  function resetAll(resetBtn = true) {
+    simRunning = false;
+    if (simTimer) clearTimeout(simTimer);
+
+    document.querySelectorAll('.node.active').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.layer.active').forEach(l => l.classList.remove('active'));
+    document.getElementById('stepLabel').textContent = '—';
+    document.getElementById('progressFill').style.width = '0%';
+    document.getElementById('zipperVis').innerHTML = '<div style="color:#475569;font-size:10px">⚡ Zipper output appears here during simulation...</div>';
+    document.getElementById('zipCounters').style.display = 'none';
+    zipperIdx = 0;
+    cMatch = cMismatch = cMissD = cMissS = 0;
+    tooltip.style.display = 'none';
+    if (resetBtn) document.getElementById('btnSimulate').disabled = false;
+  }
+
+  function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  }
+</script>
+</body>
+</html>
+

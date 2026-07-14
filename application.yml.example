@@ -1,0 +1,58 @@
+reconciler:
+  oracle:
+    jdbc-url: ${ORACLE_JDBC_URL:jdbc:oracle:thin:@//localhost:1521/FREEPDB1}
+    user: ${ORACLE_USER:RECON_APP}
+    password: ${ORACLE_PASSWORD:<CHANGE_ME>}
+
+  snowflake:
+    jdbc-url: ${SNOWFLAKE_JDBC_URL:jdbc:snowflake://<account>.snowflakecomputing.com/?warehouse=RECON_WH&db=LANDING_DB&schema=PUBLIC&role=RECON_ROLE}
+    user: ${SNOWFLAKE_USER:<CHANGE_ME>}
+    password: ${SNOWFLAKE_PASSWORD:<CHANGE_ME>}
+
+  sqlite:
+    path: ${SQLITE_PATH:./reconciler_diffs.db}
+
+  # Scalable multi-schema mapping:
+  # One Oracle connection can process many source schemas (schemaId is the stable selector).
+  # Multiple mappings can use the same table names without collisions.
+  mappings:
+    - schema-id: TENANT_US
+      oracle-schema: SRC_US
+      snowflake-database: LANDING_DB
+      snowflake-schema: PUBLIC
+      dest-filter-column: SOURCE_SCHEMA_ID
+      dest-filter-value: TENANT_US
+      enabled: true
+
+    - schema-id: TENANT_EU
+      oracle-schema: SRC_EU
+      snowflake-database: LANDING_DB
+      snowflake-schema: PUBLIC
+      dest-filter-column: SOURCE_SCHEMA_ID
+      dest-filter-value: TENANT_EU
+      enabled: true
+
+    - schema-id: ORACLE_SCHEMA1
+      oracle-schema: ORACLE_SCHEMA1
+      snowflake-database: LANDING_DB
+      snowflake-schema: PUBLIC
+      dest-filter-column: SOURCE_SCHEMA_ID
+      dest-filter-value: ORACLE_SCHEMA1
+      enabled: true
+
+    - schema-id: ORACLE_SCHEMA2
+      oracle-schema: ORACLE_SCHEMA2
+      snowflake-database: LANDING_DB
+      snowflake-schema: PUBLIC
+      dest-filter-column: SOURCE_SCHEMA_ID
+      dest-filter-value: ORACLE_SCHEMA2
+      enabled: true
+
+    - schema-id: ORACLE_SCHEMA3
+      oracle-schema: ORACLE_SCHEMA3
+      snowflake-database: LANDING_DB
+      snowflake-schema: PUBLIC
+      dest-filter-column: SOURCE_SCHEMA_ID
+      dest-filter-value: ORACLE_SCHEMA3
+      enabled: true
+
