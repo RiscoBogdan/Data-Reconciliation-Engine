@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Data Reconciliation Engine</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.3/styles/ag-grid.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.3/styles/ag-theme-alpine.css" />
+    <link rel="stylesheet" href="assets/css/app.css?v=20260713h" />
+</head>
+<body>
+<nav class="navbar navbar-dark app-navbar border-bottom sticky-top">
+    <div class="container-fluid px-3 px-lg-4">
+        <div class="d-flex align-items-center gap-3">
+            <div class="app-logo"></div>
+            <div>
+                <div class="fw-bold">Data Reconciliation Engine</div>
+                <div class="small text-secondary">Kafbat-style workspace for Oracle -> Snowflake</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <div id="statusBadge" class="diff-badge badge-blue">IDLE</div>
+        </div>
+    </div>
+</nav>
+
+<main class="container-fluid py-4 px-3 px-lg-4">
+    <!-- Step wizard: guides the user left-to-right through the workflow. -->
+    <div class="wizard-bar mb-4">
+        <div id="wizStep1" class="wizard-step is-active">
+            <span class="step-dot active">1</span>
+            <div class="wizard-step-body">
+                <div class="wizard-step-title">Select Environments</div>
+                <div class="wizard-step-sub">Oracle &amp; Snowflake schemas</div>
+            </div>
+        </div>
+        <svg class="wizard-connector" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        <div id="wizStep2" class="wizard-step">
+            <span class="step-dot pending">2</span>
+            <div class="wizard-step-body">
+                <div class="wizard-step-title">Choose Tables</div>
+                <div class="wizard-step-sub">Scan &amp; select common tables</div>
+            </div>
+        </div>
+        <svg class="wizard-connector" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        <div id="wizStep3" class="wizard-step">
+            <span class="step-dot pending">3</span>
+            <div class="wizard-step-body">
+                <div class="wizard-step-title">Run &amp; View Diffs</div>
+                <div class="wizard-step-sub">Reconcile and inspect results</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <aside class="col-12 col-xl-3">
+            <div class="card side-panel">
+                <div class="card-body d-flex flex-column gap-3">
+                    <div class="sidebar-group">
+                        <h6 class="panel-title">Configuration</h6>
+                        <div class="mb-2">
+                            <label for="srcDbSelect" class="muted-label">Oracle Database</label>
+                            <select id="srcDbSelect" class="form-select"></select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="muted-label">Oracle Schemas (drag or click to move)</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="small text-secondary mb-1">Available</div>
+                                    <div id="schemaAvailZone" class="col-zone schema-zone">
+                                        <p id="schemaAvailEmptyMsg" class="small text-secondary text-center mt-2 mb-0">Choose database and refresh</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="small text-secondary mb-1">Selected</div>
+                                    <div id="schemaSelectedZone" class="col-zone schema-zone">
+                                        <p id="schemaSelectedEmptyMsg" class="small text-secondary text-center mt-2 mb-0">Drop schemas here</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end mt-1">
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" onclick="loadOracleSchemas()">refresh</button>
+                            </div>
+                        </div>
+                        <div class="mb-2 d-none">
+                            <label for="srcSchemaInput" class="muted-label">Oracle Schema</label>
+                            <input id="srcSchemaInput" type="text" value="RECON" class="form-control" />
+                        </div>
+                        <div class="mb-2">
+                            <label for="destDbInput" class="muted-label">Snowflake Database</label>
+                            <input id="destDbInput" type="text" value="RECON_DB" class="form-control" />
+                        </div>
+                        <div>
+                            <label for="destSchemaInput" class="muted-label">Snowflake Schema</label>
+                            <input id="destSchemaInput" type="text" value="PUBLIC" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="sidebar-group sidebar-actions">
+                        <h6 class="panel-title">Scan Tables</h6>
+                        <button type="button" class="btn btn-scan w-100 mb-2 d-flex align-items-center justify-content-center gap-2" onclick="scanMatchedTables()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <span>Scan</span>
+                        </button>
+                        <label for="tableSearchInput" class="visually-hidden">Search table</label>
+                        <input id="tableSearchInput" type="text" class="form-control mb-2 hidden" placeholder="search table..." />
+                        <div id="matchedTablesResults" class="hidden">
+                            <div class="d-flex justify-content-between small text-secondary mb-2">
+                                <span id="matchedCount">0 tables</span>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" onclick="toggleAllTables(true)">all</button>
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" onclick="toggleAllTables(false)">none</button>
+                                </div>
+                            </div>
+                            <div id="matchedTablesPanel" class="list-group list-group-flush matched-list"></div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-group sidebar-actions">
+                        <h6 class="panel-title">Batch Run</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="clearBeforeCheck">
+                            <label class="form-check-label small text-secondary" for="clearBeforeCheck">Clear previous diffs before run</label>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary-cta" onclick="runBatchSelected()">Run Selected Tables</button>
+                            <button type="button" class="btn btn-neutral" onclick="runBatchAll()">Run All Common Tables</button>
+                        </div>
+                        <div class="small text-secondary mt-2">Tip: click <strong>Configure</strong> on a table to open mapping in the workspace.</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <section class="col-12 col-xl-9 d-flex flex-column gap-4">
+
+            <section id="step1" class="card table-pair-card">
+                <div class="card-body">
+                    <h6 class="panel-title">Table Pair</h6>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="srcTable" class="muted-label">Source Table (Oracle)</label>
+                            <input id="srcTable" type="text" class="form-control" placeholder="SCHEMA.ORDERS" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="destTable" class="muted-label">Destination Table (Snowflake)</label>
+                            <input id="destTable" type="text" class="form-control" placeholder="DWH.PUBLIC.ORDERS" />
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button id="loadSchemaBtn" type="button" class="btn btn-primary-cta d-inline-flex align-items-center gap-2" onclick="loadSchema()">
+                            <span id="loadSpinner" class="hidden spinner"></span>
+                            Load Schema
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="step2" class="card hidden">
+                <div class="card-body d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="panel-title mb-0">Column Mapping</h6>
+                    </div>
+
+                    <div id="colMismatchWarn" class="alert alert-warning hidden py-2 mb-0">
+                        Some column names differ between Oracle and Snowflake. Oracle column names are shown.
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-lg-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="panel-title mb-0">Available Columns</h6>
+                                <span id="availCount" class="small text-secondary">0 cols</span>
+                            </div>
+                            <div id="availZone" class="col-zone" data-zone="avail">
+                                <p id="availEmptyMsg" class="small text-secondary text-center mt-3 mb-0">Drag columns to PK or Comparison zones</p>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="panel-title mb-0">Primary Key Columns</h6>
+                                <span class="small text-secondary">Order matters</span>
+                            </div>
+                            <div id="pkZone" class="col-zone" data-zone="pk">
+                                <p id="pkEmptyMsg" class="small text-secondary text-center mt-3 mb-0">Drop PK columns here</p>
+                            </div>
+                            <div class="rounded border mt-2 px-2 py-1 small hint-box">
+                                pk_composite: <span id="pkPreview">-</span>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="panel-title mb-0">Comparison Columns</h6>
+                                <button type="button" onclick="selectAllHash()" class="btn btn-sm btn-outline-secondary">Use All</button>
+                            </div>
+                            <div id="hashZone" class="col-zone" data-zone="hash">
+                                <p id="hashEmptyMsg" class="small text-secondary text-center mt-3 mb-0">Drop columns used for comparison here</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 pt-1">
+                        <div class="col-12 col-md-4">
+                            <label for="modColSelect" class="muted-label">Modified Timestamp Column</label>
+                            <select id="modColSelect" class="form-select">
+                                <option value="">- None (no buffer window) -</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="bufferMin" class="muted-label">Buffer Window (minutes)</label>
+                            <input id="bufferMin" type="number" class="form-control" value="15" min="0" />
+                        </div>
+                        <div class="col-12 col-md-4 d-flex align-items-end">
+                            <div class="w-100 rounded border px-3 py-2 small hint-box">
+                                Rows modified within last <strong id="bufferPreview" class="text-light">15</strong> min are excluded for CDC lag.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center gap-2 pt-1">
+                        <button id="saveTableCfgBtn" type="button" onclick="saveCurrentTableConfig()" class="btn btn-outline-info">Save Table Config</button>
+                        <button type="button" onclick="clearResults()" class="btn btn-outline-secondary">Clear Results</button>
+                        <span id="validationMsg" class="small text-danger hidden"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="step3" class="d-flex flex-column gap-3">
+
+                <!-- Jobs History Panel -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="panel-title mb-0">Job History</h6>
+                            <div class="d-flex align-items-center gap-2">
+                                <span id="jobsSelectedCount" class="small text-secondary hidden">0 selected</span>
+                                <button id="deleteSelectedJobsBtn" type="button" class="btn btn-sm btn-danger hidden" onclick="deleteSelectedJobs()">🗑 Delete Selected Jobs</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadJobs()">Refresh</button>
+                            </div>
+                        </div>
+                        <div id="jobsPanel" class="table-responsive">
+                            <table class="table table-dark table-sm table-hover align-middle mb-0">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Status</th>
+                                    <th>Tables</th>
+                                    <th>Source</th>
+                                    <th>Dest</th>
+                                    <th>Diffs</th>
+                                    <th>Started</th>
+                                    <th>Finished</th>
+                                     <th>Actions</th>
+                                     <th style="width:36px;" class="text-center"><input type="checkbox" id="jobsSelectAllCheck" class="form-check-input mt-0" onchange="toggleAllJobsSelected(this.checked)" title="Select all" /></th>
+                                 </tr>
+                                 </thead>
+                                 <tbody id="jobsTableBody">
+                                 <tr><td colspan="10" class="text-secondary text-center">No jobs yet</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span id="jobsPageInfo" class="small text-secondary">Page 1</span>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-neutral" onclick="prevJobsPage()">← Prev</button>
+                                <button type="button" class="btn btn-sm btn-neutral" onclick="nextJobsPage()">Next →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Detail Modal will be rendered inline when a job is expanded -->
+                <div id="jobDetailPanel" class="card hidden">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="panel-title mb-0">Job <span id="jobDetailId" class="text-info"></span> — Tables</h6>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeJobDetail()">Close</button>
+                        </div>
+                        <div id="jobDetailTables" class="job-detail-tables-wrap"></div>
+                        <div class="mt-3">
+                            <h6 class="panel-title mb-0">Diffs for this job</h6>
+                            <div id="jobDiffGrid" class="ag-theme-alpine-dark diff-grid mt-2" style="height:300px;"></div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span id="jobDiffPageInfo" class="small text-secondary"></span>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-neutral" onclick="prevJobDiffPage()">← Prev</button>
+                                    <button type="button" class="btn btn-sm btn-neutral" onclick="nextJobDiffPage()">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-6 col-lg-3">
+                        <div class="card text-center kpi-card"><div class="card-body"><div id="statSrc" class="h4 mb-1 text-info">0</div><div class="small text-secondary">Source Rows</div></div></div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="card text-center kpi-card"><div class="card-body"><div id="statDest" class="h4 mb-1 text-primary">0</div><div class="small text-secondary">Dest Rows</div></div></div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="card text-center kpi-card kpi-clickable" role="button" tabindex="0" title="Jump to Difference Log" onclick="jumpToDiffLog()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jumpToDiffLog();}"><div class="card-body"><div id="statDiff" class="h4 mb-1 text-warning">0</div><div class="small text-secondary">Differences</div><div class="kpi-hint">View log →</div></div></div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="card text-center kpi-card"><div class="card-body"><div id="statStatus" class="h4 mb-1 text-success">IDLE</div><div class="small text-secondary">Job Status</div></div></div>
+                    </div>
+                </div>
+
+                <div class="card chart-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="panel-title mb-0">Diff Breakdown</h6>
+                            <span id="chartScopeLabel" class="small text-secondary chart-scope-label">Scope: ALL TABLES</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="liveDiffChart"></canvas>
+                            <div id="chartRunningMsg" class="chart-running-msg" style="display:none;">
+                                <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>
+                                <span>Comparison in progress — results will appear here once the job finishes.</span>
+                            </div>
+                        </div>
+                        <div id="diffSummaryBar" class="diff-summary-bar mt-3"></div>
+                    </div>
+                </div>
+
+                <div id="batchInfo" class="alert alert-warning hidden py-2 mb-0"></div>
+
+                <div class="card diff-log-card">
+                    <div class="card-body">
+                        <div class="diff-log-toolbar mb-3">
+                            <div class="diff-log-title-row">
+                                <h6 class="panel-title mb-0">Difference Log</h6>
+                                <span id="diffLogCount" class="diff-log-count"></span>
+                            </div>
+                            <div class="diff-log-controls">
+                                <label class="form-check-label small text-secondary d-flex align-items-center gap-2" for="allHistoryToggle" style="white-space:nowrap;">
+                                    <input id="allHistoryToggle" class="form-check-input mt-0" type="checkbox" />
+                                    Show all history
+                                </label>
+                                <span id="resultsScopeLabel" class="small text-secondary" style="min-width:120px;">Scope: latest job</span>
+                                <label for="tableFilterSelect" class="visually-hidden">Filter by table</label>
+                                <select id="tableFilterSelect" class="form-select diff-filter-select">
+                                    <option value="">All tables</option>
+                                </select>
+                                <label for="searchBox" class="visually-hidden">Search results</label>
+                                <input id="searchBox" type="text" class="form-control diff-search-input" placeholder="Search PK, diff type, columns..." oninput="loadResults()" />
+                                <button type="button" class="btn btn-sm btn-neutral" onclick="clearResults()">
+                                    Clear
+                                </button>
+                                <div class="dropdown">
+                                    <button type="button" class="btn btn-sm btn-primary-cta dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        ⬇ Download
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" onclick="exportResults('xlsx'); return false;">Excel (.xlsx)</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportResults('xml'); return false;">XML</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="diff-type-legend">
+                            <span class="diff-badge badge-amber">⬤ Hash Mismatch</span>
+                            <span class="diff-badge badge-red">⬤ Missing in Dest</span>
+                            <span class="diff-badge badge-blue">⬤ Missing in Source</span>
+                        </div>
+                        <div id="tablePanels" class="accordion table-panels my-3"></div>
+                        <div id="diffGrid" class="ag-theme-alpine-dark diff-grid"></div>
+                        <div class="diff-log-footer mt-3">
+                            <span id="pageInfo" class="small" style="color:#475569;">Page 1</span>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-neutral" onclick="prevPage()">← Prev</button>
+                                <button type="button" class="btn btn-sm btn-neutral" onclick="nextPage()">Next →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </div>
+</main>
+
+<div id="toast"></div>
+
+<div class="modal fade" id="diffModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Column Differences - <span id="diffModalPk" class="font-monospace"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Oracle</th>
+                            <th>Snowflake</th>
+                            <th>Different</th>
+                        </tr>
+                        </thead>
+                        <tbody id="diffModalBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.3/dist/ag-grid-community.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="assets/js/app.js?v=20260714a"></script>
+</body>
+</html>
+
